@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Face Blur</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; background: #f4f4f9; padding: 20px; }
+        .container { position: relative; display: inline-block; margin-top: 20px; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.2); }
+        video { display: none; } /* Hide raw input video */
+        canvas { background: #000; max-width: 100%; height: auto; cursor: crosshair; }
+        .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center; }
+        button { padding: 12px 24px; cursor: pointer; border: none; border-radius: 8px; background: #2563eb; color: white; font-weight: 600; transition: 0.2s; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        #status { font-weight: bold; color: #475569; margin-bottom: 15px; }
+        .video-controls { 
+            display: none; 
+            flex-direction: column; 
+            gap: 10px; 
+            margin-top: 15px; 
+            padding: 15px; 
+            background: white; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 400px;
+        }
+        .video-controls.active { display: flex; }
+        .playback-controls { display: flex; gap: 10px; align-items: center; justify-content: center; }
+        .seek-container { display: flex; flex-direction: column; gap: 5px; }
+        .seek-bar { width: 100%; cursor: pointer; }
+        .time-display { font-size: 14px; color: #475569; text-align: center; font-family: monospace; }
+        input[type="range"] { width: 100%; }
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .setting-row label {
+            font-weight: 500;
+            color: #334155;
+            min-width: 150px;
+        }
+        .setting-row input[type="range"] {
+            flex: 1;
+        }
+        .setting-row span {
+            min-width: 80px;
+            text-align: right;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .setting-row select {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Face Blur App</h1>
+    <div id="status">Loading AI Model...</div>
+
+    <div class="controls">
+        <button id="webcamBtn">Use Webcam</button>
+        <button onclick="document.getElementById('uploadVideo').click()">Upload Video</button>
+        <input type="file" id="uploadVideo" accept="video/*" style="display:none">
+        <button id="recordBtn" disabled>Start Recording</button>
+        <button id="stopBtn" disabled>Stop & Download</button>
+    </div>
+
+    <div class="container">
+        <video id="inputVideo" muted playsinline></video>
+        <canvas id="outputCanvas"></canvas>
+    </div>
+
+    <div class="settings-panel">
+        <h3 style="margin: 0 0 10px 0; color: #1e293b;">Settings</h3>
+        
+        <div class="setting-row">
+            <label>Output Resolution:</label>
+            <select id="resolutionSelect">
+                <option value="1">Original (100%)</option>
+                <option value="0.75">High (75%)</option>
+                <option value="0.5" selected>Medium (50%)</option>
+                <option value="0.25">Low (25%)</option>
+            </select>
+        </div>
+
+        <div class="setting-row">
+            <label>Blur Radius:</label>
+            <input type="range" id="blurRadius" min="20" max="100" value="40" step="5">
+            <span id="blurValue">40px</span>
+        </div>
+
+        <div class="setting-row">
+            <label>Detection Update Rate:</label>
+            <input type="range" id="detectionRate" min="50" max="1000" value="200" step="50">
+            <span id="rateValue">200ms</span>
+        </div>
+
+        <div class="setting-row">
+            <label>Detection Sensitivity:</label>
+            <input type="range" id="sensitivity" min="0.5" max="0.95" value="0.75" step="0.05">
+            <span id="sensitivityValue">0.75</span>
+        </div>
+    </div>
+
+    <div class="video-controls" id="videoControls">
+        <div class="playback-controls">
+            <button id="playPauseBtn">Play</button>
+            <button id="restartBtn">Restart</button>
+            <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+        </div>
+        <div class="seek-container">
+            <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0" step="0.1">
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('inputVideo');
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const videoControls = document.getElementById('videoControls');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const seekBar = document.getElementById('seekBar');
+        const timeDisplay = document.getElementById('timeDisplay');
+        const blurRadiusInput = document.getElementById('blurRadius');
+        const blurValue = document.getElementById('blurValue');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const detectionRateInput = document.getElementById('detectionRate');
+        const rateValue = document.getElementById('rateValue');
+        const sensitivityInput = document.getElementById('sensitivity');
+        const sensitivityValue = document.getElementById('sensitivityValue');
+
+        let model, mediaRecorder, recordedChunks = [];
+        let isProcessing = false;
+        let isUsingVideo = false;
+        let blurRadius = 40;
+        let resolutionScale = 0.5;
+        let detectionInterval = 200; // ms between detections
+        let sensitivity = 0.75;
+        let lastDetectionTime = 0;
+        let cachedPredictions = [];
+
+        // Update blur radius value display
+        blurRadiusInput.addEventListener('input', (e) => {
+            blurRadius = parseInt(e.target.value);
+            blurValue.textContent = blurRadius + 'px';
+        });
+
+        // Update resolution
+        resolutionSelect.addEventListener('change', (e) => {
+            resolutionScale = parseFloat(e.target.value);
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth * resolutionScale;
+                canvas.height = video.videoHeight * resolutionScale;
+            }
+        });
+
+        // Update detection rate
+        detectionRateInput.addEventListener('input', (e) => {
+            detectionInterval = parseInt(e.target.value);
+            rateValue.textContent = detectionInterval + 'ms';
+        });
+
+        // Update sensitivity
+        sensitivityInput.addEventListener('input', (e) => {
+            sensitivity = parseFloat(e.target.value);
+            sensitivityValue.textContent = sensitivity;
+        });
+
+        // Format time helper
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Update time display
+        function updateTimeDisplay() {
+            if (video.duration) {
+                timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+                seekBar.value = (video.currentTime / video.duration) * 100;
+            }
+        }
+
+        // Video event listeners
+        video.addEventListener('timeupdate', updateTimeDisplay);
+        video.addEventListener('loadedmetadata', () => {
+            seekBar.max = 100;
+            updateTimeDisplay();
+        });
+
+        // Play/Pause button
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                video.play();
+                playPauseBtn.textContent = 'Pause';
+                if (!isProcessing) {
+                    isProcessing = true;
+                    processFrame();
+                }
+            } else {
+                video.pause();
+                playPauseBtn.textContent = 'Play';
+            }
+        });
+
+        // Restart button
+        restartBtn.addEventListener('click', () => {
+            video.currentTime = 0;
+            video.play();
+            playPauseBtn.textContent = 'Pause';
+        });
+
+        // Seek bar
+        seekBar.addEventListener('input', (e) => {
+            const seekTime = (e.target.value / 100) * video.duration;
+            video.currentTime = seekTime;
+        });
+
+        // Prevent seeking from stopping processing
+        seekBar.addEventListener('mousedown', () => {
+            video.pause();
+        });
+
+        seekBar.addEventListener('mouseup', () => {
+            if (isUsingVideo) {
+                video.play();
+                if (!isProcessing) {
+                    isProcessing = true;
+                    processFrame();
+                }
+            }
+        });
+
+        async function loadModel() {
+            model = await blazeface.load();
+            status.innerText = "Ready to test!";
+        }
+
+        async function processFrame() {
+            if (!isProcessing) return;
+
+            const currentTime = Date.now();
+            
+            // Only run face detection at the specified interval to reduce flickering
+            if (currentTime - lastDetectionTime >= detectionInterval) {
+                try {
+                    // Run detection with sensitivity threshold
+                    const predictions = await model.estimateFaces(video, false);
+                    
+                    // Filter predictions based on sensitivity (score threshold)
+                    cachedPredictions = predictions.filter(face => {
+                        // BlazeFace doesn't return scores directly, but we can use probability if available
+                        // For now, we'll keep all predictions and the sensitivity will affect detection frequency
+                        return face.probability ? face.probability[0] >= sensitivity : true;
+                    });
+                    
+                    lastDetectionTime = currentTime;
+                } catch (err) {
+                    console.error('Detection error:', err);
+                }
+            }
+
+            // Draw current video frame to canvas (scaled to output resolution)
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Apply circular blur to each cached detected face
+            cachedPredictions.forEach(face => {
+                const start = face.topLeft;
+                const end = face.bottomRight;
+                const width = end[0] - start[0];
+                const height = end[1] - start[1];
+                
+                // Scale coordinates based on output resolution
+                const scaleX = canvas.width / video.videoWidth;
+                const scaleY = canvas.height / video.videoHeight;
+                
+                // Calculate center and radius for circular blur
+                const centerX = (start[0] + width / 2) * scaleX;
+                const centerY = (start[1] + height / 2) * scaleY;
+                const radius = Math.max(width * scaleX, height * scaleY) / 2;
+
+                ctx.save();
+                ctx.beginPath();
+                // Create circular clipping path
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.filter = `blur(${blurRadius}px)`;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(processFrame);
+        }
+
+        function startApp(isVideo = false) {
+            canvas.width = video.videoWidth * resolutionScale;
+            canvas.height = video.videoHeight * resolutionScale;
+            isProcessing = true;
+            isUsingVideo = isVideo;
+            lastDetectionTime = 0;
+            cachedPredictions = [];
+            processFrame();
+            recordBtn.disabled = false;
+            
+            // Show video controls only for uploaded videos
+            if (isVideo) {
+                videoControls.classList.add('active');
+                playPauseBtn.textContent = 'Pause';
+            } else {
+                videoControls.classList.remove('active');
+            }
+        }
+
+        // 1. Webcam Handler
+        document.getElementById('webcamBtn').onclick = async () => {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            video.onloadedmetadata = () => {
+                video.play();
+                startApp(false);
+            };
+        };
+
+        // 2. Video Upload Handler
+        document.getElementById('uploadVideo').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                // Clear any existing stream
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+                
+                video.src = URL.createObjectURL(file);
+                video.muted = false; // Allow audio for uploaded videos
+                video.onloadedmetadata = () => {
+                    video.play();
+                    startApp(true);
+                };
+            }
+        };
+
+        // 3. Recording & 120s Limit
+        recordBtn.onclick = () => {
+            recordedChunks = [];
+            const stream = canvas.captureStream(30); // 30 FPS
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+            mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'blurred_video.webm';
+                a.click();
+            };
+
+            mediaRecorder.start();
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            status.innerText = "Recording (Max 120s)...";
+
+            // Enforce 120s limit
+            setTimeout(() => {
+                if (mediaRecorder.state === "recording") stopBtn.click();
+            }, 120000);
+        };
+
+        stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.innerText = "Saved! Ready for another.";
+            // pause video
+            if (isUsingVideo) {
+                video.pause();
+                playPauseBtn.textContent = 'Play';
+            }
+        };
+
+        loadModel();
+    </script>
+</body>
+</html>

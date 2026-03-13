@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur - Webcam Mode</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: #f4f4f9; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+        nav a {
+            text-decoration: none;
+            color: #334155;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        nav a:hover, nav a.active {
+            color: #667eea;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+        h1 { color: #1e293b; margin-bottom: 0.5rem; }
+        .subtitle { color: #64748b; margin-bottom: 2rem; }
+        .container { 
+            position: relative; 
+            display: inline-block; 
+            margin: 2rem 0; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2); 
+        }
+        video { display: none; }
+        canvas { 
+            background: #000; 
+            max-width: 100%; 
+            height: auto; 
+            display: block;
+        }
+        .controls { 
+            display: flex; 
+            gap: 10px; 
+            margin-bottom: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
+        button { 
+            padding: 12px 24px; 
+            cursor: pointer; 
+            border: none; 
+            border-radius: 8px; 
+            background: #2563eb; 
+            color: white; 
+            font-weight: 600; 
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #94a3b8; cursor: not-allowed; }
+        button.danger { background: #dc2626; }
+        button.danger:hover { background: #b91c1c; }
+        #status { 
+            font-weight: bold; 
+            color: #475569; 
+            margin-bottom: 15px;
+            padding: 0.75rem 1.5rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .setting-row label {
+            font-weight: 500;
+            color: #334155;
+            min-width: 150px;
+        }
+        .setting-row input[type="range"] {
+            flex: 1;
+        }
+        .setting-row span {
+            min-width: 80px;
+            text-align: right;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        .setting-row select {
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #cbd5e1;
+            background: white;
+            cursor: pointer;
+        }
+        footer {
+            background: white;
+            color: #64748b;
+            text-align: center;
+            padding: 1.5rem;
+            margin-top: 2rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        @media (max-width: 768px) {
+            nav ul { gap: 1rem; font-size: 0.9rem; }
+            .settings-panel { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">🎭 Face Blur</div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="webcam.html" class="active">Webcam</a></li>
+            <li><a href="video.html">Video</a></li>
+            <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="support.html">Support</a></li>
+        </ul>
+    </nav>
+
+    <div class="main-content">
+        <h1>📹 Webcam Face Blur</h1>
+        <p class="subtitle">Blur faces in real-time using your webcam</p>
+        
+        <div id="status">Loading AI Model...</div>
+
+        <div class="controls">
+            <button id="startBtn">Start Webcam</button>
+            <button id="stopWebcamBtn" disabled>Stop Webcam</button>
+            <button id="recordBtn" disabled>Start Recording</button>
+            <button id="stopBtn" class="danger" disabled>Stop & Download</button>
+        </div>
+
+        <div class="container">
+            <video id="inputVideo" muted playsinline></video>
+            <canvas id="outputCanvas"></canvas>
+        </div>
+
+        <div class="settings-panel">
+            <h3 style="margin: 0 0 10px 0; color: #1e293b;">Settings</h3>
+            
+            <div class="setting-row">
+                <label>Output Resolution:</label>
+                <select id="resolutionSelect">
+                    <option value="1">Original (100%)</option>
+                    <option value="0.75">High (75%)</option>
+                    <option value="0.5" selected>Medium (50%)</option>
+                    <option value="0.25">Low (25%)</option>
+                </select>
+            </div>
+
+            <div class="setting-row">
+                <label>Blur Radius:</label>
+                <input type="range" id="blurRadius" min="20" max="100" value="40" step="5">
+                <span id="blurValue">40px</span>
+            </div>
+
+            <div class="setting-row">
+                <label>Detection Update Rate:</label>
+                <input type="range" id="detectionRate" min="50" max="1000" value="200" step="50">
+                <span id="rateValue">200ms</span>
+            </div>
+
+            <div class="setting-row">
+                <label>Detection Sensitivity:</label>
+                <input type="range" id="sensitivity" min="0.5" max="0.95" value="0.75" step="0.05">
+                <span id="sensitivityValue">0.75</span>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Face Blur App. <a href="support.html" style="color: #667eea; text-decoration: none;">Need Help?</a></p>
+    </footer>
+
+    <script>
+        const video = document.getElementById('inputVideo');
+        const canvas = document.getElementById('outputCanvas');
+        const ctx = canvas.getContext('2d');
+        const status = document.getElementById('status');
+        const startBtn = document.getElementById('startBtn');
+        const stopWebcamBtn = document.getElementById('stopWebcamBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const blurRadiusInput = document.getElementById('blurRadius');
+        const blurValue = document.getElementById('blurValue');
+        const resolutionSelect = document.getElementById('resolutionSelect');
+        const detectionRateInput = document.getElementById('detectionRate');
+        const rateValue = document.getElementById('rateValue');
+        const sensitivityInput = document.getElementById('sensitivity');
+        const sensitivityValue = document.getElementById('sensitivityValue');
+
+        let model, mediaRecorder, recordedChunks = [];
+        let isProcessing = false;
+        let blurRadius = 40;
+        let resolutionScale = 0.5;
+        let detectionInterval = 200;
+        let sensitivity = 0.75;
+        let lastDetectionTime = 0;
+        let cachedPredictions = [];
+        let webcamStream = null;
+
+        // Update blur radius value display
+        blurRadiusInput.addEventListener('input', (e) => {
+            blurRadius = parseInt(e.target.value);
+            blurValue.textContent = blurRadius + 'px';
+        });
+
+        // Update resolution
+        resolutionSelect.addEventListener('change', (e) => {
+            resolutionScale = parseFloat(e.target.value);
+            if (video.videoWidth && video.videoHeight) {
+                canvas.width = video.videoWidth * resolutionScale;
+                canvas.height = video.videoHeight * resolutionScale;
+            }
+        });
+
+        // Update detection rate
+        detectionRateInput.addEventListener('input', (e) => {
+            detectionInterval = parseInt(e.target.value);
+            rateValue.textContent = detectionInterval + 'ms';
+        });
+
+        // Update sensitivity
+        sensitivityInput.addEventListener('input', (e) => {
+            sensitivity = parseFloat(e.target.value);
+            sensitivityValue.textContent = sensitivity;
+        });
+
+        async function loadModel() {
+            model = await blazeface.load();
+            status.innerText = "✅ Ready! Click 'Start Webcam' to begin.";
+        }
+
+        async function processFrame() {
+            if (!isProcessing) return;
+
+            const currentTime = Date.now();
+            
+            if (currentTime - lastDetectionTime >= detectionInterval) {
+                try {
+                    const predictions = await model.estimateFaces(video, false);
+                    cachedPredictions = predictions.filter(face => {
+                        return face.probability ? face.probability[0] >= sensitivity : true;
+                    });
+                    lastDetectionTime = currentTime;
+                } catch (err) {
+                    console.error('Detection error:', err);
+                }
+            }
+
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            cachedPredictions.forEach(face => {
+                const start = face.topLeft;
+                const end = face.bottomRight;
+                const width = end[0] - start[0];
+                const height = end[1] - start[1];
+                
+                const scaleX = canvas.width / video.videoWidth;
+                const scaleY = canvas.height / video.videoHeight;
+                
+                const centerX = (start[0] + width / 2) * scaleX;
+                const centerY = (start[1] + height / 2) * scaleY;
+                const radius = Math.max(width * scaleX, height * scaleY) / 2;
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.filter = `blur(${blurRadius}px)`;
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            });
+
+            requestAnimationFrame(processFrame);
+        }
+
+        function startApp() {
+            canvas.width = video.videoWidth * resolutionScale;
+            canvas.height = video.videoHeight * resolutionScale;
+            isProcessing = true;
+            lastDetectionTime = 0;
+            cachedPredictions = [];
+            processFrame();
+            recordBtn.disabled = false;
+            stopWebcamBtn.disabled = false;
+            startBtn.disabled = true;
+            status.innerText = "🎥 Webcam Active - Recording Available";
+        }
+
+        // Start Webcam
+        startBtn.onclick = async () => {
+            try {
+                webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = webcamStream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                    startApp();
+                };
+            } catch (err) {
+                status.innerText = "❌ Error: Could not access webcam";
+                console.error(err);
+            }
+        };
+
+        // Stop Webcam
+        stopWebcamBtn.onclick = () => {
+            if (webcamStream) {
+                webcamStream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+                isProcessing = false;
+                startBtn.disabled = false;
+                stopWebcamBtn.disabled = true;
+                recordBtn.disabled = true;
+                status.innerText = "⏹️ Webcam Stopped";
+            }
+        };
+
+        // Recording
+        recordBtn.onclick = () => {
+            recordedChunks = [];
+            const stream = canvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+
+            mediaRecorder.ondataavailable = (e) => { 
+                if (e.data.size > 0) recordedChunks.push(e.data); 
+            };
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'webcam_blurred_' + Date.now() + '.webm';
+                a.click();
+                status.innerText = "💾 Recording Saved!";
+            };
+
+            mediaRecorder.start();
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            status.innerText = "🔴 Recording... (Max 120s)";
+
+            setTimeout(() => {
+                if (mediaRecorder.state === "recording") stopBtn.click();
+            }, 120000);
+        };
+
+        stopBtn.onclick = () => {
+            mediaRecorder.stop();
+            recordBtn.disabled = false;
+            stopBtn.disabled = true;
+            status.innerText = "🎥 Webcam Active - Recording Available";
+        };
+
+        loadModel();
+    </script>
+</body>
+</html>
