@@ -1,212 +1,538 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Face Blur - Video Upload</title>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Face Blur — Video</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: #f4f4f9; 
+        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
+
+        :root {
+            --bg: #0d0d12;
+            --surface: #14141c;
+            --surface2: #1c1c28;
+            --border: rgba(255, 255, 255, 0.07);
+            --accent: #7c6cfc;
+            --accent2: #c084fc;
+            --green: #22d3a0;
+            --red: #f87171;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --mono: 'DM Mono', monospace;
+            --display: 'Syne', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--mono);
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
+
+        /* ── NAV ── */
         nav {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.9rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        nav .logo {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
+
+        .logo {
+            font-family: var(--display);
+            font-size: 1.25rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
         }
+
         nav ul {
             list-style: none;
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
         }
+
         nav a {
             text-decoration: none;
-            color: #334155;
-            font-weight: 500;
-            transition: color 0.3s;
+            color: var(--muted);
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            transition: color 0.2s;
         }
-        nav a:hover, nav a.active {
-            color: #667eea;
+
+        nav a:hover,
+        nav a.active {
+            color: var(--text);
         }
-        .main-content {
+
+        /* ── MAIN ── */
+        .main {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2rem;
+            padding: 1.5rem 1rem 3rem;
+            gap: 1.2rem;
         }
-        h1 { color: #1e293b; margin-bottom: 0.5rem; }
-        .subtitle { color: #64748b; margin-bottom: 2rem; }
-        .container { 
-            position: relative; 
-            display: inline-block; 
-            margin: 2rem 0; 
-            border-radius: 12px; 
-            overflow: hidden; 
-            box-shadow: 0 8px 30px rgba(0,0,0,0.2); 
+
+        /* Desktop: side-by-side layout */
+        .content-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+            align-items: flex-start;
         }
-        video { display: none; }
-        canvas { 
-            background: #000; 
-            max-width: 100%; 
-            height: auto; 
-            display: block;
-        }
-        .controls { 
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 20px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-        }
-        button { 
-            padding: 12px 24px; 
-            cursor: pointer; 
-            border: none; 
-            border-radius: 8px; 
-            background: #2563eb; 
-            color: white; 
-            font-weight: 600; 
-            transition: 0.2s;
-            font-size: 1rem;
-        }
-        button:hover { background: #1d4ed8; }
-        button:disabled { background: #94a3b8; cursor: not-allowed; }
-        button.danger { background: #dc2626; }
-        button.danger:hover { background: #b91c1c; }
-        button.success { background: #16a34a; }
-        button.success:hover { background: #15803d; }
-        #status { 
-            font-weight: bold; 
-            color: #475569; 
-            margin-bottom: 15px;
-            padding: 0.75rem 1.5rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .video-controls { 
-            display: none; 
-            flex-direction: column; 
-            gap: 10px; 
-            margin-top: 15px; 
-            padding: 15px; 
-            background: white; 
-            border-radius: 8px; 
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            min-width: 400px;
-        }
-        .video-controls.active { display: flex; }
-        .playback-controls { 
-            display: flex; 
-            gap: 10px; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        .seek-container { 
-            display: flex; 
-            flex-direction: column; 
-            gap: 5px; 
-        }
-        .seek-bar { width: 100%; cursor: pointer; }
-        .time-display { 
-            font-size: 14px; 
-            color: #475569; 
-            text-align: center; 
-            font-family: monospace; 
-        }
-        .settings-panel {
+
+        .left-panel {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-top: 15px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
+            gap: 1rem;
+            flex: 0 0 320px;
+            /* min-width: 280px; */
         }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .page-title {
+            font-family: var(--display);
+            font-size: clamp(1.6rem, 5vw, 2.5rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            text-align: center;
+        }
+
+        .page-title span {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* ── STATUS PILL ── */
+        #status {
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            padding: 0.4rem 1rem;
+            border-radius: 999px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            transition: all 0.3s;
+        }
+
+        #status.ready {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        #status.active {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        #status.recording {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* ── UPLOAD ── */
+        .upload-area {
+            width: 100%;
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 2rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+            background: var(--surface);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragging {
+            border-color: var(--accent);
+            background: rgba(124, 108, 252, 0.06);
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .upload-area h3 {
+            font-family: var(--display);
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-area p {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* ── CANVAS WRAPPER ── */
+        .canvas-wrap {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0, 0, 0, 0.6);
+            max-width: 100%;
+            max-height: 512px;
+        }
+
+        video {
+            display: none;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 512px;
+            width: auto;
+            height: auto;
+            background: #000;
+        }
+
+        /* ── VIDEO CONTROLS ── */
+        .video-controls {
+            display: none;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+        }
+
+        .video-controls.active {
+            display: flex;
+        }
+
+        .playback-row {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-display {
+            font-size: 0.72rem;
+            color: var(--muted);
+            letter-spacing: 0.06em;
+            min-width: 110px;
+            text-align: center;
+        }
+
+        /* ── RECORD BUTTONS ── */
+        .rec-row {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* ── SETTINGS ── */
+        .settings {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .settings-title {
+            font-family: var(--display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
         .setting-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 15px;
+            gap: 0.75rem;
         }
+
         .setting-row label {
-            font-weight: 500;
-            color: #334155;
-            min-width: 150px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            min-width: 130px;
         }
+
         .setting-row input[type="range"] {
             flex: 1;
+            accent-color: var(--accent);
         }
-        .setting-row span {
-            min-width: 80px;
-            text-align: right;
-            color: #2563eb;
-            font-weight: 600;
-        }
+
         .setting-row select {
-            padding: 5px 10px;
-            border-radius: 4px;
-            border: 1px solid #cbd5e1;
-            background: white;
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 0.3rem 0.5rem;
+            font-size: 0.78rem;
+            font-family: var(--mono);
+        }
+
+        .setting-val {
+            font-size: 0.72rem;
+            color: var(--accent);
+            min-width: 55px;
+            text-align: right;
+        }
+
+        /* ── MEMORY METER ── */
+        .mem-bar-wrap {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .mem-bar-wrap label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            min-width: 130px;
+        }
+
+        .mem-bar-bg {
+            flex: 1;
+            height: 6px;
+            background: var(--surface2);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+
+        .mem-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--accent));
+            border-radius: 99px;
+            transition: width 1s;
+            width: 0%;
+        }
+
+        .mem-label {
+            font-size: 0.72rem;
+            color: var(--muted);
+            min-width: 55px;
+            text-align: right;
+        }
+
+        /* ── BUTTONS ── */
+        button {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            padding: 0.55rem 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
             cursor: pointer;
+            background: var(--surface2);
+            color: var(--text);
+            transition: all 0.2s;
         }
-        .upload-area {
-            border: 3px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 3rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: white;
-            margin-bottom: 1rem;
+
+        button:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
         }
-        .upload-area:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
+
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
         }
-        .upload-area.dragging {
-            border-color: #667eea;
-            background: #f0f4ff;
+
+        button.btn-primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
         }
-        .upload-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+
+        button.btn-primary:hover:not(:disabled) {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            color: #fff;
         }
-        footer {
-            background: white;
-            color: #64748b;
-            text-align: center;
+
+        button.btn-danger {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        button.btn-danger:hover:not(:disabled) {
+            background: rgba(248, 113, 113, 0.1);
+        }
+
+        button.btn-green {
+            border-color: var(--green);
+            color: var(--green);
+        }
+
+        button.btn-green:hover:not(:disabled) {
+            background: rgba(34, 211, 160, 0.1);
+        }
+
+        button.btn-active {
+            background: rgba(124, 108, 252, 0.15);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* canvas crosshair in click-blur mode */
+        .canvas-wrap.click-blur-mode canvas {
+            cursor: crosshair;
+        }
+
+        /* ── UPLOAD MODAL ── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
             padding: 1.5rem;
-            margin-top: 2rem;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            width: min(480px, calc(100vw - 2rem));
+            position: relative;
+            box-shadow: 0 32px 80px rgba(0,0,0,0.8);
         }
+        .modal-close {
+            position: absolute;
+            top: 0.9rem;
+            right: 0.9rem;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-size: 1.1rem;
+            line-height: 1;
+            padding: 0.25rem 0.4rem;
+            cursor: pointer;
+            border-radius: 6px;
+        }
+        .modal-close:hover { color: var(--text); background: var(--surface2); }
+
+        /* seekbar */
+        input[type=range].seek-bar {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.2rem;
+            font-size: 0.72rem;
+            color: var(--muted);
+            border-top: 1px solid var(--border);
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        @media (max-width: 480px) {
+            nav ul {
+                gap: 0.9rem;
+            }
+
+            nav a {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Mobile: stack layout with side-by-side controls */
         @media (max-width: 768px) {
-            nav ul { gap: 1rem; font-size: 0.9rem; }
-            .settings-panel, .video-controls { max-width: 100%; min-width: 100%; }
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                order: 2;
+                flex: 1 1 auto;
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .left-panel .upload-area {
+                /* flex: 1 1 45%; */
+                min-width: 200px;
+            }
+
+            .left-panel .settings {
+                flex: 1 1 45%;
+                min-width: 200px;
+            }
+
+            .right-panel {
+                order: 1;
+                width: 100%;
+            }
+
+            .canvas-wrap {
+                max-height: none;
+            }
+
+            canvas {
+                max-height: 60vh;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .left-panel {
+                flex-direction: column;
+            }
+
+            .left-panel .upload-area,
+            .left-panel .settings {
+                flex: 1 1 100%;
+                min-width: auto;
+            }
         }
     </style>
 </head>
+
 <body>
+
     <nav>
-        <div class="logo">🎭 Face Blur</div>
+        <div class="logo">◈ Face Blur</div>
         <ul>
             <li><a href="index.html">Home</a></li>
             <li><a href="webcam.html">Webcam</a></li>
@@ -216,331 +542,761 @@
         </ul>
     </nav>
 
-    <div class="main-content">
-        <h1>🎬 Video Face Blur</h1>
-        <p class="subtitle">Upload a video and process faces with blur effect</p>
-        
-        <div id="status">Loading AI Model...</div>
+    <div class="main">
+        <!-- <h1 class="page-title">Video <span>Face Blur</span></h1> -->
 
-        <div class="upload-area" id="uploadArea" onclick="document.getElementById('uploadVideo').click()">
-            <div class="upload-icon">📁</div>
-            <h3>Click or Drop Video Here</h3>
-            <p style="color: #64748b; margin-top: 0.5rem;">Support for MP4, WebM, AVI, MOV</p>
-            <input type="file" id="uploadVideo" accept="video/*" style="display:none">
-        </div>
+        <div id="status">Loading AI model…</div>
 
-        <div class="controls">
-            <button id="recordBtn" disabled class="success">Start Recording Output</button>
-            <button id="stopBtn" class="danger" disabled>Stop & Download</button>
-        </div>
-
-        <div class="container">
-            <video id="inputVideo" muted playsinline></video>
-            <canvas id="outputCanvas"></canvas>
-        </div>
-
-        <div class="video-controls" id="videoControls">
-            <div class="playback-controls">
-                <button id="playPauseBtn">Play</button>
-                <button id="restartBtn">Restart</button>
-                <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
-            </div>
-            <div class="seek-container">
-                <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0" step="0.1">
+    <!-- Upload modal -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal-box">
+            <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('uploadVideo').click()">
+                <div class="upload-icon">📁</div>
+                <h3>Click or drop a video here</h3>
+                <p>MP4 · WebM · MOV · AVI</p>
+                <input type="file" id="uploadVideo" accept="video/*" style="display:none">
             </div>
         </div>
+    </div>
 
-        <div class="settings-panel">
-            <h3 style="margin: 0 0 10px 0; color: #1e293b;">Settings</h3>
-            
-            <div class="setting-row">
-                <label>Output Resolution:</label>
-                <select id="resolutionSelect">
-                    <option value="1">Original (100%)</option>
-                    <option value="0.75">High (75%)</option>
-                    <option value="0.5" selected>Medium (50%)</option>
-                    <option value="0.25">Low (25%)</option>
-                </select>
+    <div class="content-wrapper">
+            <!-- Left Panel: Upload & Settings -->
+            <div class="left-panel">
+
+
+                <!-- Settings -->
+                <div class="settings">
+                    <div class="settings-title">Settings</div>
+
+                    <div class="setting-row">
+                        <button id="openUploadBtn" class="btn-primary" style="flex:1">📂 Open Video…</button>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Output Resolution</label>
+                        <select id="resolutionSelect">
+                            <option value="1">Original (100%)</option>
+                            <option value="0.75">High (75%)</option>
+                            <option value="0.5" selected>Medium (50%)</option>
+                            <option value="0.25">Low (25%)</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Ellipse Size</label>
+                        <input type="range" id="blurRadius" min="10" max="80" value="30" step="5">
+                        <span class="setting-val" id="blurValue">30px</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Detection Interval</label>
+                        <input type="range" id="detectionRate" min="100" max="1000" value="300" step="50">
+                        <span class="setting-val" id="rateValue">300ms</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Sensitivity</label>
+                        <input type="range" id="sensitivity" min="0.5" max="0.95" value="0.7" step="0.05">
+                        <span class="setting-val" id="sensitivityValue">0.70</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Max Faces</label>
+                        <input type="range" id="maxFaces" min="1" max="3" value="1" step="1">
+                        <span class="setting-val" id="maxFacesValue">1</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Mask Type</label>
+                        <select id="maskTypeSelect">
+                            <option value="blur" selected>Blur (Pixelated)</option>
+                            <option value="black">Black Ellipse</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Size Offset</label>
+                        <input type="range" id="sizeOffset" min="-100" max="100" value="0" step="5">
+                        <span class="setting-val" id="sizeOffsetValue">+0px</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Mask Falloff</label>
+                        <input type="range" id="falloffTime" min="0" max="5" value="1" step="0.1">
+                        <span class="setting-val" id="falloffValue">1.0s</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Click Blur</label>
+                        <button id="clickBlurBtn" style="flex:1">✦ Off</button>
+                    </div>
+
+                    <!-- TF.js tensor memory meter -->
+                    <div class="mem-bar-wrap">
+                        <label>TF Memory</label>
+                        <div class="mem-bar-bg">
+                            <div class="mem-bar-fill" id="memFill"></div>
+                        </div>
+                        <span class="mem-label" id="memLabel">0 tensors</span>
+                    </div>
+                </div>
             </div>
 
-            <div class="setting-row">
-                <label>Blur Radius:</label>
-                <input type="range" id="blurRadius" min="20" max="100" value="40" step="5">
-                <span id="blurValue">40px</span>
-            </div>
+            <!-- Right Panel: Canvas & Controls -->
+            <div class="right-panel">
+                <!-- Canvas -->
+                <div class="canvas-wrap" id="canvasWrap">
+                    <video id="inputVideo" muted playsinline></video>
+                    <canvas id="outputCanvas"></canvas>
+                </div>
 
-            <div class="setting-row">
-                <label>Detection Update Rate:</label>
-                <input type="range" id="detectionRate" min="50" max="1000" value="200" step="50">
-                <span id="rateValue">200ms</span>
-            </div>
+                <!-- Playback controls -->
+                <div>
+                    <div class="video-controls" id="videoControls">
+                        <div class="playback-row">
+                            <button id="playPauseBtn">▶ Play</button>
+                            <button id="restartBtn">↺ Restart</button>
+                            <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
+                        </div>
+                        <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0" step="0.1">
+                        <div class="rec-row">
+                            <button id="processBtn" class="btn-primary" disabled>⏺ Process & Export</button>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="setting-row">
-                <label>Detection Sensitivity:</label>
-                <input type="range" id="sensitivity" min="0.5" max="0.95" value="0.75" step="0.05">
-                <span id="sensitivityValue">0.75</span>
             </div>
         </div>
     </div>
 
     <footer>
-        <p>&copy; 2026 Face Blur App. <a href="support.html" style="color: #667eea; text-decoration: none;">Need Help?</a></p>
+        &copy; 2026 Face Blur App · <a href="support.html">Support</a>
     </footer>
 
     <script>
+        // ─────────────────────────────────────────────
+        //  DOM refs
+        // ─────────────────────────────────────────────
         const video = document.getElementById('inputVideo');
         const canvas = document.getElementById('outputCanvas');
-        const ctx = canvas.getContext('2d');
-        const status = document.getElementById('status');
-        const recordBtn = document.getElementById('recordBtn');
-        const stopBtn = document.getElementById('stopBtn');
+        const ctx = canvas.getContext('2d', { willReadFrequently: false });
+        const statusEl = document.getElementById('status');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadVideo = document.getElementById('uploadVideo');
         const videoControls = document.getElementById('videoControls');
         const playPauseBtn = document.getElementById('playPauseBtn');
         const restartBtn = document.getElementById('restartBtn');
         const seekBar = document.getElementById('seekBar');
         const timeDisplay = document.getElementById('timeDisplay');
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadVideo = document.getElementById('uploadVideo');
-        const blurRadiusInput = document.getElementById('blurRadius');
-        const blurValue = document.getElementById('blurValue');
-        const resolutionSelect = document.getElementById('resolutionSelect');
-        const detectionRateInput = document.getElementById('detectionRate');
-        const rateValue = document.getElementById('rateValue');
-        const sensitivityInput = document.getElementById('sensitivity');
-        const sensitivityValue = document.getElementById('sensitivityValue');
+        const processBtn = document.getElementById('processBtn');
+        const blurRadiusIn = document.getElementById('blurRadius');
+        const blurVal = document.getElementById('blurValue');
+        const resSel = document.getElementById('resolutionSelect');
+        const detectRateIn = document.getElementById('detectionRate');
+        const rateVal = document.getElementById('rateValue');
+        const sensitivityIn = document.getElementById('sensitivity');
+        const sensitivityVal = document.getElementById('sensitivityValue');
+        const memFill = document.getElementById('memFill');
+        const memLabel = document.getElementById('memLabel');
+        const maskTypeSelect = document.getElementById('maskTypeSelect');
+        const sizeOffsetIn = document.getElementById('sizeOffset');
+        const sizeOffsetVal = document.getElementById('sizeOffsetValue');
+        const falloffIn = document.getElementById('falloffTime');
+        const falloffValEl = document.getElementById('falloffValue');
+        const maxFacesIn = document.getElementById('maxFaces');
+        const maxFacesVal = document.getElementById('maxFacesValue');
+        const clickBlurBtn = document.getElementById('clickBlurBtn');
+        const canvasWrap = document.getElementById('canvasWrap');
+        const uploadModal   = document.getElementById('uploadModal');
+        const openUploadBtn = document.getElementById('openUploadBtn');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
 
-        let model, mediaRecorder, recordedChunks = [];
-        let isProcessing = false;
-        let blurRadius = 40;
-        let resolutionScale = 0.5;
-        let detectionInterval = 200;
-        let sensitivity = 0.75;
-        let lastDetectionTime = 0;
-        let cachedPredictions = [];
+        // ── Modal open / close ──
+        function openModal()  { uploadModal.classList.add('open'); }
+        function closeModal() { uploadModal.classList.remove('open'); }
+        openUploadBtn.addEventListener('click', openModal);
+        modalCloseBtn.addEventListener('click', closeModal);
+        uploadModal.addEventListener('click', e => { if (e.target === uploadModal) closeModal(); });
 
-        // Drag and drop handlers
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.classList.add('dragging');
+        // ─────────────────────────────────────────────
+        //  State
+        // ─────────────────────────────────────────────
+        let model = null;
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let rafId = null;
+        let isRunning = false;
+        let cachedFaces = [];
+        let lastDetectMs = 0;
+        let detectPending = false;
+
+        // ─────────────────────────────────────────────
+        //  User settings (live)
+        // ─────────────────────────────────────────────
+        let blurRadius = 30;
+        let resScale = 0.5;
+        let detectInterval = 300;
+        let sensitivity = 0.70;
+        let maskType = 'blur';    // 'blur' or 'black'
+        let sizeOffset = 0;         // px offset to enlarge/shrink mask
+        let falloffTime = 1.0;       // seconds to hold mask after face lost
+        const FADE_DURATION_S = 0.4;    // seconds to fade out after holdoff expires
+        let maxFaces = 1;         // max number of faces to blur (1–3)
+
+        // Mouse / touch click-blur state
+        let mouseBlurEnabled = false;
+        let mouseBlurPos = null;  // { x, y } in canvas pixels, or null
+        let mouseBlurHeld = false;
+        let mouseBlurReleasedAt = 0;     // performance.now() timestamp of last release
+
+
+        // ─────────────────────────────────────────────
+        //  Settings listeners
+        // ─────────────────────────────────────────────
+        blurRadiusIn.addEventListener('input', e => {
+            blurRadius = +e.target.value;
+            blurVal.textContent = blurRadius + 'px';
         });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragging');
+        resSel.addEventListener('change', e => {
+            resScale = +e.target.value;
+            if (video.videoWidth) resizeCanvas();
         });
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.classList.remove('dragging');
-            const files = e.dataTransfer.files;
-            if (files.length > 0 && files[0].type.startsWith('video/')) {
-                handleVideoUpload(files[0]);
-            }
+        detectRateIn.addEventListener('input', e => {
+            detectInterval = +e.target.value;
+            rateVal.textContent = detectInterval + 'ms';
         });
 
-        // Update blur radius value display
-        blurRadiusInput.addEventListener('input', (e) => {
-            blurRadius = parseInt(e.target.value);
-            blurValue.textContent = blurRadius + 'px';
+        sensitivityIn.addEventListener('input', e => {
+            sensitivity = +e.target.value;
+            sensitivityVal.textContent = sensitivity.toFixed(2);
         });
 
-        // Update resolution
-        resolutionSelect.addEventListener('change', (e) => {
-            resolutionScale = parseFloat(e.target.value);
-            if (video.videoWidth && video.videoHeight) {
-                canvas.width = video.videoWidth * resolutionScale;
-                canvas.height = video.videoHeight * resolutionScale;
-            }
+        maskTypeSelect.addEventListener('change', e => {
+            maskType = e.target.value;
         });
 
-        // Update detection rate
-        detectionRateInput.addEventListener('input', (e) => {
-            detectionInterval = parseInt(e.target.value);
-            rateValue.textContent = detectionInterval + 'ms';
+        sizeOffsetIn.addEventListener('input', e => {
+            sizeOffset = +e.target.value;
+            sizeOffsetVal.textContent = (sizeOffset >= 0 ? '+' : '') + sizeOffset + 'px';
         });
 
-        // Update sensitivity
-        sensitivityInput.addEventListener('input', (e) => {
-            sensitivity = parseFloat(e.target.value);
-            sensitivityValue.textContent = sensitivity;
+        falloffIn.addEventListener('input', e => {
+            falloffTime = +e.target.value;
+            falloffValEl.textContent = falloffTime.toFixed(1) + 's';
         });
 
-        // Format time helper
-        function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        maxFacesIn.addEventListener('input', e => {
+            maxFaces = +e.target.value;
+            maxFacesVal.textContent = maxFaces;
+        });
+
+        clickBlurBtn.addEventListener('click', () => {
+            mouseBlurEnabled = !mouseBlurEnabled;
+            clickBlurBtn.classList.toggle('btn-active', mouseBlurEnabled);
+            clickBlurBtn.textContent = mouseBlurEnabled ? '✦ On' : '✦ Off';
+            canvasWrap.classList.toggle('click-blur-mode', mouseBlurEnabled);
+            if (!mouseBlurEnabled) { mouseBlurPos = null; mouseBlurHeld = false; }
+        });
+
+        // ─────────────────────────────────────────────
+        //  Click-blur canvas events
+        //  Maps pointer/touch coords into canvas pixel space,
+        //  accounting for CSS scaling of the canvas element.
+        // ─────────────────────────────────────────────
+        function canvasCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const src = e.touches ? e.touches[0] : e;
+            return {
+                x: (src.clientX - rect.left) * scaleX,
+                y: (src.clientY - rect.top) * scaleY
+            };
         }
 
-        // Update time display
-        function updateTimeDisplay() {
+        canvas.addEventListener('mousedown', e => {
+            if (!mouseBlurEnabled) return;
+            mouseBlurHeld = true;
+            mouseBlurPos = canvasCoords(e);
+        });
+        canvas.addEventListener('mousemove', e => {
+            if (!mouseBlurEnabled || !mouseBlurHeld) return;
+            mouseBlurPos = canvasCoords(e);
+        });
+        canvas.addEventListener('mouseup', () => {
+            if (!mouseBlurEnabled || !mouseBlurHeld) return;
+            mouseBlurHeld = false;
+            mouseBlurReleasedAt = performance.now();
+        });
+        canvas.addEventListener('mouseleave', () => {
+            if (!mouseBlurEnabled || !mouseBlurHeld) return;
+            mouseBlurHeld = false;
+            mouseBlurReleasedAt = performance.now();
+        });
+        canvas.addEventListener('touchstart', e => {
+            if (!mouseBlurEnabled) return;
+            e.preventDefault();
+            mouseBlurHeld = true;
+            mouseBlurPos = canvasCoords(e);
+        }, { passive: false });
+        canvas.addEventListener('touchmove', e => {
+            if (!mouseBlurEnabled || !mouseBlurHeld) return;
+            e.preventDefault();
+            mouseBlurPos = canvasCoords(e);
+        }, { passive: false });
+        canvas.addEventListener('touchend', () => {
+            if (!mouseBlurEnabled || !mouseBlurHeld) return;
+            mouseBlurHeld = false;
+            mouseBlurReleasedAt = performance.now();
+        });
+
+        function resizeCanvas() {
+            canvas.width = Math.round(video.videoWidth * resScale);
+            canvas.height = Math.round(video.videoHeight * resScale);
+            cachedFaces = [];   // invalidate — coords are now stale
+        }
+
+        // ─────────────────────────────────────────────
+        //  Drag & drop
+        // ─────────────────────────────────────────────
+        uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('dragging'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragging'));
+        uploadArea.addEventListener('drop', e => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragging');
+            const f = e.dataTransfer.files[0];
+            if (f?.type.startsWith('video/')) { closeModal(); handleVideoUpload(f); }
+        });
+        uploadVideo.onchange = e => { if (e.target.files[0]) { closeModal(); handleVideoUpload(e.target.files[0]); } };
+
+        // ─────────────────────────────────────────────
+        //  Time display
+        // ─────────────────────────────────────────────
+        function fmt(s) {
+            return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+        }
+        video.addEventListener('timeupdate', () => {
             if (video.duration) {
-                timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+                timeDisplay.textContent = `${fmt(video.currentTime)} / ${fmt(video.duration)}`;
                 seekBar.value = (video.currentTime / video.duration) * 100;
             }
-        }
-
-        // Video event listeners
-        video.addEventListener('timeupdate', updateTimeDisplay);
-        video.addEventListener('loadedmetadata', () => {
-            seekBar.max = 100;
-            updateTimeDisplay();
         });
 
-        // Play/Pause button
+        // ─────────────────────────────────────────────
+        //  Playback controls
+        // ─────────────────────────────────────────────
         playPauseBtn.addEventListener('click', () => {
-            if (video.paused) {
-                video.play();
-                playPauseBtn.textContent = 'Pause';
-                if (!isProcessing) {
-                    isProcessing = true;
-                    processFrame();
-                }
-            } else {
-                video.pause();
-                playPauseBtn.textContent = 'Play';
-            }
+            if (video.paused) { video.play(); startLoop(); }
+            else { video.pause(); stopLoop(); }
+            playPauseBtn.textContent = video.paused ? '▶ Play' : '⏸ Pause';
         });
 
-        // Restart button
         restartBtn.addEventListener('click', () => {
             video.currentTime = 0;
             video.play();
-            playPauseBtn.textContent = 'Pause';
+            playPauseBtn.textContent = '⏸ Pause';
+            startLoop();
         });
 
-        // Seek bar
-        seekBar.addEventListener('input', (e) => {
-            const seekTime = (e.target.value / 100) * video.duration;
-            video.currentTime = seekTime;
+        let isSeeking = false;
+        seekBar.addEventListener('mousedown', () => { isSeeking = true; video.pause(); });
+        seekBar.addEventListener('touchstart', () => { isSeeking = true; video.pause(); }, { passive: true });
+        seekBar.addEventListener('input', e => {
+            video.currentTime = (e.target.value / 100) * video.duration;
+        });
+        seekBar.addEventListener('mouseup', () => { isSeeking = false; video.play(); startLoop(); });
+        seekBar.addEventListener('touchend', () => { isSeeking = false; video.play(); startLoop(); });
+
+        video.addEventListener('ended', () => {
+            stopLoop();
+            playPauseBtn.textContent = '▶ Play';
         });
 
-        seekBar.addEventListener('mousedown', () => {
-            video.pause();
-        });
+        // ─────────────────────────────────────────────
+        //  Face detection — runs in a separate async
+        //  task so it never blocks the render loop.
+        //  Tensors are always disposed after use.
+        // ─────────────────────────────────────────────
+        async function runDetection() {
+            if (!model || detectPending || video.paused || video.ended) return;
+            detectPending = true;
 
-        seekBar.addEventListener('mouseup', () => {
-            video.play();
-            if (!isProcessing) {
-                isProcessing = true;
-                processFrame();
-            }
-        });
-
-        async function loadModel() {
-            model = await blazeface.load();
-            status.innerText = "✅ Ready! Upload a video to begin.";
-        }
-
-        async function processFrame() {
-            if (!isProcessing) return;
-
-            const currentTime = Date.now();
-            
-            if (currentTime - lastDetectionTime >= detectionInterval) {
-                try {
-                    const predictions = await model.estimateFaces(video, false);
-                    cachedPredictions = predictions.filter(face => {
-                        return face.probability ? face.probability[0] >= sensitivity : true;
-                    });
-                    lastDetectionTime = currentTime;
-                } catch (err) {
-                    console.error('Detection error:', err);
-                }
+            let predictions;
+            try {
+                predictions = await model.estimateFaces(video, false);
+            } catch (e) {
+                detectPending = false;
+                return;
             }
 
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Explicit tensor cleanup
+            tf.engine().startScope();
+            tf.engine().endScope();
 
-            cachedPredictions.forEach(face => {
+            // ── Original coordinate logic (Bug #3 fix reverted) ──
+            // BlazeFace returns coords in video-native space.
+            // Scale only the radius, not the position, to match canvas.
+            const nowMs = performance.now();
+            const detected = [];
+
+            // Sort by probability descending, then keep only top maxFaces
+            const sorted = predictions
+                .map(f => ({ f, prob: Array.isArray(f.probability) ? f.probability[0] : (f.probability ?? 1) }))
+                .filter(({ prob }) => prob >= sensitivity)
+                .sort((a, b) => b.prob - a.prob)
+                .slice(0, maxFaces)
+                .map(({ f }) => f);
+
+            for (const face of sorted) {
+
                 const start = face.topLeft;
                 const end = face.bottomRight;
                 const width = end[0] - start[0];
                 const height = end[1] - start[1];
-                
+
                 const scaleX = canvas.width / video.videoWidth;
                 const scaleY = canvas.height / video.videoHeight;
-                
+
                 const centerX = (start[0] + width / 2) * scaleX;
                 const centerY = (start[1] + height / 2) * scaleY;
                 const radius = Math.max(width * scaleX, height * scaleY) / 2;
 
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-                ctx.clip();
-                ctx.filter = `blur(${blurRadius}px)`;
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                ctx.restore();
-            });
+                detected.push({ centerX, centerY, radius });
+            }
+            // Matched existing entries get their lastSeen refreshed + position updated.
+            // Unmatched existing entries are kept until they pass their full fade window.
+            const fullFadeMs = (falloffTime + FADE_DURATION_S) * 1000;
+            let remaining = cachedFaces.slice(); // work on a copy so we can splice matches
+            const next = [];
 
-            requestAnimationFrame(processFrame);
+            for (const d of detected) {
+                let bestIdx = -1, bestDist = Infinity;
+                for (let i = 0; i < remaining.length; i++) {
+                    const c = remaining[i];
+                    const dx = c.centerX - d.centerX;
+                    const dy = c.centerY - d.centerY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < bestDist) { bestDist = dist; bestIdx = i; }
+                }
+                // Count as same face if centres are within (thisRadius + oldRadius) * 0.8
+                const matchThresh = d.radius * 0.8 + (bestIdx >= 0 ? remaining[bestIdx].radius * 0.8 : 0);
+                if (bestIdx >= 0 && bestDist < matchThresh) {
+                    remaining.splice(bestIdx, 1); // consume so it can't re-match
+                }
+                next.push({ centerX: d.centerX, centerY: d.centerY, radius: d.radius, lastSeen: nowMs });
+            }
+
+            // Carry forward unmatched faces still inside their falloff + fade window.
+            // If active detections already fill maxFaces slots, skip the hold phase and
+            // force the old face straight into the fade-out so it dissolves immediately
+            // instead of lingering at full opacity for the full holdoff duration.
+            const holdMs = falloffTime * 1000;
+            for (const f of remaining) {
+                if (nowMs - f.lastSeen < fullFadeMs) {
+                    let entry = f;
+                    if (next.length >= maxFaces) {
+                        // Backdate lastSeen so elapsed >= holdMs → fade starts right now
+                        const forcedLastSeen = nowMs - holdMs - 1;
+                        entry = { ...f, lastSeen: Math.min(f.lastSeen, forcedLastSeen) };
+                    }
+                    next.push(entry);
+                }
+            }
+
+            cachedFaces = next;
+            detectPending = false;
         }
 
+        // ─────────────────────────────────────────────
+        //  Render loop — draws every rAF tick;
+        //  detection is triggered on a timer and runs
+        //  concurrently (does NOT block render).
+        // ─────────────────────────────────────────────
+        function renderFrame(now) {
+            if (!isRunning) return;
+            rafId = requestAnimationFrame(renderFrame);
+
+            if (video.paused || video.ended || video.readyState < 2) return;
+
+            // 1. Draw current video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // 2. Apply AI face masks (handles its own alpha / falloff logic)
+            if (cachedFaces.length > 0) applyBlur(now);
+
+            // 2b. Apply manual click-blur on top
+            applyMouseBlur(now);
+
+            // 3. Kick off detection if enough time has passed
+            if (now - lastDetectMs >= detectInterval) {
+                lastDetectMs = now;
+                runDetection();   // fire-and-forget; updates cachedFaces async
+            }
+
+            // 4. Update memory meter (every ~60 frames ≈ 1s)
+            if (Math.random() < 0.016) updateMemMeter();
+        }
+
+        // ─────────────────────────────────────────────
+        //  Applies either blur or black ellipse mask
+        //  based on user's maskType selection.
+        // ─────────────────────────────────────────────
+        function applyBlur(now) {
+            const holdMs = falloffTime * 1000;
+            const fadeDurMs = FADE_DURATION_S * 1000;
+
+            for (const { centerX, centerY, radius, lastSeen } of cachedFaces) {
+                // ── Compute opacity based on falloff ──
+                const elapsed = now - lastSeen;
+                let alpha = 1.0;
+                if (elapsed > holdMs) {
+                    // Inside fade-out window: 1 → 0 over FADE_DURATION_S
+                    alpha = 1.0 - (elapsed - holdMs) / fadeDurMs;
+                    if (alpha <= 0) continue; // fully gone, skip
+                }
+
+                const r = (radius * 1.15) + sizeOffset; // slight padding + user offset
+                if (r <= 0) continue; // skip if offset made it negative
+
+                ctx.save();
+                ctx.globalAlpha = alpha;
+
+                if (maskType === 'black') {
+                    // Black ellipse with soft feathered edges
+                    const grad = ctx.createRadialGradient(
+                        centerX, centerY, r * 0.55,
+                        centerX, centerY, r
+                    );
+                    grad.addColorStop(0, 'rgba(0,0,0,1)');
+                    grad.addColorStop(0.6, 'rgba(0,0,0,0.95)');
+                    grad.addColorStop(1, 'rgba(0,0,0,0)');
+
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                } else {
+                    // Pixelated blur effect
+                    const x = Math.max(0, centerX - r);
+                    const y = Math.max(0, centerY - r);
+                    const w = Math.min(r * 2, canvas.width - x);
+                    const h = Math.min(r * 2, canvas.height - y);
+                    if (w > 0 && h > 0) {
+                        // Pixelation: scale down then scale up
+                        const pixelSize = Math.max(4, Math.round(r / 6));
+                        const tempCanvas = document.createElement('canvas');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        const smallW = Math.ceil(w / pixelSize);
+                        const smallH = Math.ceil(h / pixelSize);
+                        tempCanvas.width = smallW;
+                        tempCanvas.height = smallH;
+
+                        // Draw scaled down
+                        tempCtx.drawImage(canvas, x, y, w, h, 0, 0, smallW, smallH);
+
+                        // Create circular clip and draw scaled up
+                        ctx.beginPath();
+                        ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.imageSmoothingEnabled = false;
+                        ctx.drawImage(tempCanvas, 0, 0, smallW, smallH, x, y, w, h);
+                    }
+                }
+
+                ctx.restore();
+            }
+        }
+
+        // ─────────────────────────────────────────────
+        //  Manual click-blur — drawn at the pointer position
+        //  while held, then fades out over FADE_DURATION_S.
+        // ─────────────────────────────────────────────
+        function applyMouseBlur(now) {
+            if (!mouseBlurEnabled || !mouseBlurPos) return;
+
+            let alpha = 1.0;
+            if (!mouseBlurHeld) {
+                const elapsed = now - mouseBlurReleasedAt;
+                alpha = 1.0 - elapsed / (FADE_DURATION_S * 1000);
+                if (alpha <= 0) { mouseBlurPos = null; return; } // fully faded — reset
+            }
+
+            const r = blurRadius + sizeOffset;
+            if (r <= 0) return;
+            const { x: centerX, y: centerY } = mouseBlurPos;
+
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            if (maskType === 'black') {
+                const grad = ctx.createRadialGradient(
+                    centerX, centerY, r * 0.55,
+                    centerX, centerY, r
+                );
+                grad.addColorStop(0, 'rgba(0,0,0,1)');
+                grad.addColorStop(0.6, 'rgba(0,0,0,0.95)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            } else {
+                const x = Math.max(0, centerX - r);
+                const y = Math.max(0, centerY - r);
+                const w = Math.min(r * 2, canvas.width - x);
+                const h = Math.min(r * 2, canvas.height - y);
+                if (w > 0 && h > 0) {
+                    const pixelSize = Math.max(4, Math.round(r / 6));
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    const smallW = Math.ceil(w / pixelSize);
+                    const smallH = Math.ceil(h / pixelSize);
+                    tempCanvas.width = smallW;
+                    tempCanvas.height = smallH;
+                    tempCtx.drawImage(canvas, x, y, w, h, 0, 0, smallW, smallH);
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(tempCanvas, 0, 0, smallW, smallH, x, y, w, h);
+                }
+            }
+            ctx.restore();
+        }
+
+        // ─────────────────────────────────────────────
+        //  Loop helpers
+        // ─────────────────────────────────────────────
+        function startLoop() {
+            if (isRunning) return;
+            isRunning = true;
+            lastDetectMs = 0;   // force detection on first frame
+            rafId = requestAnimationFrame(renderFrame);
+            setStatus('active', '▶ Processing video…');
+        }
+
+        function stopLoop() {
+            isRunning = false;
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        }
+
+        // ─────────────────────────────────────────────
+        //  Video load
+        // ─────────────────────────────────────────────
         function handleVideoUpload(file) {
+            stopLoop();
+            if (video.src) URL.revokeObjectURL(video.src);
+
             video.src = URL.createObjectURL(file);
             video.muted = false;
+
             video.onloadedmetadata = () => {
-                canvas.width = video.videoWidth * resolutionScale;
-                canvas.height = video.videoHeight * resolutionScale;
-                video.play();
-                isProcessing = true;
-                lastDetectionTime = 0;
-                cachedPredictions = [];
-                processFrame();
-                recordBtn.disabled = false;
+                resizeCanvas();
                 videoControls.classList.add('active');
-                playPauseBtn.textContent = 'Pause';
-                status.innerText = "▶️ Video Processing Active";
+                processBtn.disabled = false;
+                cachedFaces = [];
+                lastDetectMs = 0;
+                video.play();
+                playPauseBtn.textContent = '⏸ Pause';
+                startLoop();
             };
         }
 
-        // Video Upload Handler
-        uploadVideo.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                handleVideoUpload(file);
+        // ─────────────────────────────────────────────
+        //  Model load
+        // ─────────────────────────────────────────────
+        async function loadModel() {
+            setStatus('', 'Loading AI model…');
+            try {
+                // Use WebGL backend for GPU-accelerated inference; fall back to WASM/CPU
+                await tf.setBackend('webgl');
+                await tf.ready();
+            } catch (e) {
+                await tf.setBackend('cpu');
             }
-        };
+            model = await blazeface.load({ maxFaces: 5 });  // cap faces to save memory
+            setStatus('ready', '✓ Ready — upload a video');
+        }
 
-        // Recording
-        recordBtn.onclick = () => {
+        // ─────────────────────────────────────────────
+        //  Memory meter
+        // ─────────────────────────────────────────────
+        function updateMemMeter() {
+            const info = tf.memory();
+            const tensors = info.numTensors;
+            // Warn if tensors pile up (leak indicator); cap bar at 200 tensors
+            const pct = Math.min((tensors / 200) * 100, 100);
+            memFill.style.width = pct + '%';
+            memFill.style.background = pct > 70
+                ? 'linear-gradient(90deg,#f87171,#fbbf24)'
+                : 'linear-gradient(90deg,#22d3a0,#7c6cfc)';
+            memLabel.textContent = tensors + ' tensors';
+        }
+
+        // ─────────────────────────────────────────────
+        //  Status helper
+        // ─────────────────────────────────────────────
+        function setStatus(cls, msg) {
+            statusEl.className = '';
+            if (cls) statusEl.classList.add(cls);
+            statusEl.textContent = msg;
+        }
+
+        // ─────────────────────────────────────────────
+        //  Process & Export
+        //  Restarts video from beginning, starts recording,
+        //  and auto-downloads when the video ends.
+        // ─────────────────────────────────────────────
+        processBtn.onclick = () => {
             recordedChunks = [];
-            const stream = canvas.captureStream(30);
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
 
-            mediaRecorder.ondataavailable = (e) => { 
-                if (e.data.size > 0) recordedChunks.push(e.data); 
-            };
-            
+            // Restart video from the top
+            video.currentTime = 0;
+            video.play();
+            playPauseBtn.textContent = '⏸ Pause';
+            startLoop();
+
+            const stream = canvas.captureStream(30);
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                ? 'video/webm;codecs=vp9'
+                : 'video/webm';
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType, videoBitsPerSecond: 2_000_000 });
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'video_blurred_' + Date.now() + '.webm';
+                const a = Object.assign(document.createElement('a'), {
+                    href: URL.createObjectURL(blob),
+                    download: 'face_blur_' + Date.now() + '.webm'
+                });
                 a.click();
-                status.innerText = "💾 Recording Saved!";
+                processBtn.disabled = false;
+                processBtn.textContent = '⏺ Process & Export';
+                setStatus('ready', '✓ File downloaded');
             };
 
-            mediaRecorder.start();
-            recordBtn.disabled = true;
-            stopBtn.disabled = false;
-            status.innerText = "🔴 Recording Output... (Max 120s)";
+            mediaRecorder.start(500);
+            processBtn.disabled = true;
+            processBtn.textContent = '⏳ Processing…';
+            setStatus('recording', '⏺ Recording — will download when video ends');
 
-            setTimeout(() => {
-                if (mediaRecorder.state === "recording") stopBtn.click();
-            }, 120000);
+            // When video ends, stop recording → triggers onstop → downloads
+            video.addEventListener('ended', function onEnded() {
+                video.removeEventListener('ended', onEnded);
+                if (mediaRecorder?.state === 'recording') mediaRecorder.stop();
+                stopLoop();
+                playPauseBtn.textContent = '▶ Play';
+            });
         };
 
-        stopBtn.onclick = () => {
-            mediaRecorder.stop();
-            recordBtn.disabled = false;
-            stopBtn.disabled = true;
-            video.pause();
-            playPauseBtn.textContent = 'Play';
-            status.innerText = "✅ Recording Complete!";
-        };
-
+        // ─────────────────────────────────────────────
+        //  Boot
+        // ─────────────────────────────────────────────
         loadModel();
     </script>
 </body>
+
 </html>
