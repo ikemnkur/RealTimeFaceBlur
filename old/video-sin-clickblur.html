@@ -610,8 +610,7 @@
                     <div class="setting-row">
                         <label>Mask Type</label>
                         <select id="maskTypeSelect">
-                            <option value="blur" selected>Pixelated</option>
-                            <option value="smooth">Smooth Blur</option>
+                            <option value="blur" selected>Blur (Pixelated)</option>
                             <option value="black">Black Ellipse</option>
                         </select>
                     </div>
@@ -631,36 +630,6 @@
                     <div class="setting-row">
                         <label>Click Blur</label>
                         <button id="clickBlurBtn" style="flex:1">✦ Off</button>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>CB Size</label>
-                        <input type="range" id="cbSize" min="10" max="120" value="40" step="5">
-                        <span class="setting-val" id="cbSizeValue">40px</span>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>CB Fade Time</label>
-                        <input type="range" id="cbFade" min="0.1" max="3" value="0.4" step="0.1">
-                        <span class="setting-val" id="cbFadeValue">0.4s</span>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>CB Opacity</label>
-                        <input type="range" id="cbAlpha" min="0.1" max="1" value="1" step="0.05">
-                        <span class="setting-val" id="cbAlphaValue">1.00</span>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>CB Offset X</label>
-                        <input type="range" id="cbOffsetX" min="-80" max="80" value="0" step="1">
-                        <span class="setting-val" id="cbOffsetXValue">0px</span>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>CB Offset Y</label>
-                        <input type="range" id="cbOffsetY" min="-80" max="80" value="-32" step="1">
-                        <span class="setting-val" id="cbOffsetYValue">-32px</span>
                     </div>
 
                     <!-- TF.js tensor memory meter -->
@@ -739,16 +708,6 @@
         const maxFacesVal = document.getElementById('maxFacesValue');
         const clickBlurBtn = document.getElementById('clickBlurBtn');
         const canvasWrap = document.getElementById('canvasWrap');
-        const cbSizeIn     = document.getElementById('cbSize');
-        const cbSizeVal    = document.getElementById('cbSizeValue');
-        const cbFadeIn     = document.getElementById('cbFade');
-        const cbFadeVal    = document.getElementById('cbFadeValue');
-        const cbAlphaIn    = document.getElementById('cbAlpha');
-        const cbAlphaVal   = document.getElementById('cbAlphaValue');
-        const cbOffsetXIn  = document.getElementById('cbOffsetX');
-        const cbOffsetXVal = document.getElementById('cbOffsetXValue');
-        const cbOffsetYIn  = document.getElementById('cbOffsetY');
-        const cbOffsetYVal = document.getElementById('cbOffsetYValue');
         const uploadModal   = document.getElementById('uploadModal');
         const openUploadBtn = document.getElementById('openUploadBtn');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
@@ -786,15 +745,10 @@
         let maxFaces = 1;         // max number of faces to blur (1–3)
 
         // Mouse / touch click-blur state
-        let mouseBlurEnabled    = false;
-        let mouseBlurPos        = null;  // { x, y } in canvas pixels, or null
-        let mouseBlurHeld       = false;
+        let mouseBlurEnabled = false;
+        let mouseBlurPos = null;  // { x, y } in canvas pixels, or null
+        let mouseBlurHeld = false;
         let mouseBlurReleasedAt = 0;     // performance.now() timestamp of last release
-        let cbSize      = 40;   // click-blur radius
-        let cbFadeTime  = 0.4;  // seconds to fade out on release
-        let cbAlpha     = 1.0;  // max opacity
-        let cbOffsetX   = 0;    // horizontal offset in canvas px
-        let cbOffsetY   = -32;  // vertical offset in canvas px
 
 
         // ─────────────────────────────────────────────
@@ -844,43 +798,7 @@
             clickBlurBtn.classList.toggle('btn-active', mouseBlurEnabled);
             clickBlurBtn.textContent = mouseBlurEnabled ? '✦ On' : '✦ Off';
             canvasWrap.classList.toggle('click-blur-mode', mouseBlurEnabled);
-            if (!mouseBlurEnabled) {
-                mouseBlurPos = null;
-                mouseBlurHeld = false;
-                // Let the normal video-driven loop decide whether to keep going.
-                // If video is paused/ended, stop now; if playing, leave it.
-                if (!isRunning || video.paused || video.ended) {
-                    isRunning = false;
-                    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-                }
-            } else {
-                // Start the loop if it isn't already running (e.g. video is paused).
-                if (!isRunning) {
-                    isRunning = true;
-                    rafId = requestAnimationFrame(renderFrame);
-                }
-            }
-        });
-
-        cbSizeIn.addEventListener('input', e => {
-            cbSize = +e.target.value;
-            cbSizeVal.textContent = cbSize + 'px';
-        });
-        cbFadeIn.addEventListener('input', e => {
-            cbFadeTime = +e.target.value;
-            cbFadeVal.textContent = cbFadeTime.toFixed(1) + 's';
-        });
-        cbAlphaIn.addEventListener('input', e => {
-            cbAlpha = +e.target.value;
-            cbAlphaVal.textContent = cbAlpha.toFixed(2);
-        });
-        cbOffsetXIn.addEventListener('input', e => {
-            cbOffsetX = +e.target.value;
-            cbOffsetXVal.textContent = cbOffsetX + 'px';
-        });
-        cbOffsetYIn.addEventListener('input', e => {
-            cbOffsetY = +e.target.value;
-            cbOffsetYVal.textContent = cbOffsetY + 'px';
+            if (!mouseBlurEnabled) { mouseBlurPos = null; mouseBlurHeld = false; }
         });
 
         // ─────────────────────────────────────────────
@@ -1101,30 +1019,24 @@
             if (!isRunning) return;
             rafId = requestAnimationFrame(renderFrame);
 
-            const videoReady = video.readyState >= 2;
-            const videoActive = videoReady && !video.paused && !video.ended;
+            if (video.paused || video.ended || video.readyState < 2) return;
 
-            // When video has a frame (playing OR paused), redraw it so every
-            // tick starts from a clean slate — essential for the pixelation
-            // readback and so stale mouse-blur patches don't accumulate.
-            if (videoReady && canvas.width > 0) {
-                // 1. Draw current video frame
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // 1. Draw current video frame
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // 2. Apply AI face masks
-                if (cachedFaces.length > 0) applyBlur(now);
-            }
+            // 2. Apply AI face masks (handles its own alpha / falloff logic)
+            if (cachedFaces.length > 0) applyBlur(now);
 
-            // 3. Apply manual click-blur (runs even when video is paused)
+            // 2b. Apply manual click-blur on top
             applyMouseBlur(now);
 
-            // 4. Kick off detection only while video is playing
-            if (videoActive && now - lastDetectMs >= detectInterval) {
+            // 3. Kick off detection if enough time has passed
+            if (now - lastDetectMs >= detectInterval) {
                 lastDetectMs = now;
                 runDetection();   // fire-and-forget; updates cachedFaces async
             }
 
-            // 5. Update memory meter (every ~60 frames ≈ 1s)
+            // 4. Update memory meter (every ~60 frames ≈ 1s)
             if (Math.random() < 0.016) updateMemMeter();
         }
 
@@ -1166,24 +1078,6 @@
                     ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
                     ctx.fillStyle = grad;
                     ctx.fill();
-                } else if (maskType === 'smooth') {
-                    // Smooth (averaging) blur via CanvasFilter
-                    const x = Math.max(0, centerX - r);
-                    const y = Math.max(0, centerY - r);
-                    const w = Math.min(r * 2, canvas.width - x);
-                    const h = Math.min(r * 2, canvas.height - y);
-                    if (w > 0 && h > 0) {
-                        const tempCanvas = document.createElement('canvas');
-                        const tempCtx = tempCanvas.getContext('2d');
-                        tempCanvas.width = Math.round(w);
-                        tempCanvas.height = Math.round(h);
-                        tempCtx.filter = `blur(${Math.max(6, Math.round(r / 3))}px)`;
-                        tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-                        ctx.beginPath();
-                        ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
-                        ctx.clip();
-                        ctx.drawImage(tempCanvas, 0, 0, w, h, x, y, w, h);
-                    }
                 } else {
                     // Pixelated blur effect
                     const x = Math.max(0, centerX - r);
@@ -1223,17 +1117,16 @@
         function applyMouseBlur(now) {
             if (!mouseBlurEnabled || !mouseBlurPos) return;
 
-            let alpha = cbAlpha;
+            let alpha = 1.0;
             if (!mouseBlurHeld) {
                 const elapsed = now - mouseBlurReleasedAt;
-                alpha = cbAlpha * (1.0 - elapsed / (cbFadeTime * 1000));
+                alpha = 1.0 - elapsed / (FADE_DURATION_S * 1000);
                 if (alpha <= 0) { mouseBlurPos = null; return; } // fully faded — reset
             }
 
-            const r = cbSize;
+            const r = blurRadius + sizeOffset;
             if (r <= 0) return;
-            const centerX = mouseBlurPos.x + cbOffsetX;
-            const centerY = mouseBlurPos.y + cbOffsetY;
+            const { x: centerX, y: centerY } = mouseBlurPos;
 
             ctx.save();
             ctx.globalAlpha = alpha;
@@ -1250,23 +1143,6 @@
                 ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
-            } else if (maskType === 'smooth') {
-                const x = Math.max(0, centerX - r);
-                const y = Math.max(0, centerY - r);
-                const w = Math.min(r * 2, canvas.width - x);
-                const h = Math.min(r * 2, canvas.height - y);
-                if (w > 0 && h > 0) {
-                    const tempCanvas = document.createElement('canvas');
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCanvas.width = Math.round(w);
-                    tempCanvas.height = Math.round(h);
-                    tempCtx.filter = `blur(${Math.max(6, Math.round(r / 3))}px)`;
-                    tempCtx.drawImage(canvas, x, y, w, h, 0, 0, w, h);
-                    ctx.beginPath();
-                    ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
-                    ctx.clip();
-                    ctx.drawImage(tempCanvas, 0, 0, w, h, x, y, w, h);
-                }
             } else {
                 const x = Math.max(0, centerX - r);
                 const y = Math.max(0, centerY - r);
@@ -1303,9 +1179,6 @@
         }
 
         function stopLoop() {
-            // If click-blur is active keep the rAF loop alive so mouse-blur
-            // rendering continues to work even when the video is paused/ended.
-            if (mouseBlurEnabled) return;
             isRunning = false;
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         }
