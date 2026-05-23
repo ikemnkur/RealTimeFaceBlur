@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Notice - FaceBlurr</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #111827; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #1e1e2e; border: 1px solid #f97316; border-radius: 12px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); padding: 25px 40px; text-align: center; border-bottom: 2px solid #f97316;">
+              <h1 style="margin: 0; color: #f97316; font-size: 24px; font-weight: bold;">
+                🔥 FaceBlurr
+              </h1>
+              <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 13px;">
+                Account Notification
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Notice Type Badge -->
+          <tr>
+            <td style="padding: 30px 40px 20px 40px;">
+              <!--
+                NOTICE TYPES - Change the background and text color based on notice type:
+                - Purchase Confirmation: background #22c55e, text #000
+                - Plan Expiry Warning: background #f97316, text #000
+                - Suspension Notice: background #ef4444, text #fff
+                - General Notice: background #3b82f6, text #fff
+                - Password Changed: background #22c55e, text #000
+                - Credit Added: background #22c55e, text #000
+              -->
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="background-color: {{NOTICE_BADGE_BG}}; color: {{NOTICE_BADGE_TEXT}}; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+                    {{NOTICE_TYPE}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Main Content -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <h2 style="margin: 0 0 20px 0; color: #f97316; font-size: 22px; font-weight: bold;">
+                {{NOTICE_TITLE}}
+              </h2>
+              
+              <p style="margin: 0 0 20px 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                Hello <span style="color: #f97316; font-weight: bold;">{{USERNAME}}</span>,
+              </p>
+              
+              <p style="margin: 0 0 20px 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                {{NOTICE_MESSAGE}}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Details Box (Optional) -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border: 1px solid #35354d; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <h4 style="margin: 0 0 15px 0; color: #f97316; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                      {{DETAILS_TITLE}}
+                    </h4>
+                    
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e;">
+                          <span style="color: #94a3b8; font-size: 14px;">{{DETAIL_1_LABEL}}</span>
+                        </td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e; text-align: right;">
+                          <span style="color: #e2e8f0; font-size: 14px; font-weight: bold;">{{DETAIL_1_VALUE}}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e;">
+                          <span style="color: #94a3b8; font-size: 14px;">{{DETAIL_2_LABEL}}</span>
+                        </td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e; text-align: right;">
+                          <span style="color: #e2e8f0; font-size: 14px; font-weight: bold;">{{DETAIL_2_VALUE}}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e;">
+                          <span style="color: #94a3b8; font-size: 14px;">{{DETAIL_3_LABEL}}</span>
+                        </td>
+                        <td style="padding: 8px 0; border-bottom: 1px solid #2a2a3e; text-align: right;">
+                          <span style="color: #e2e8f0; font-size: 14px; font-weight: bold;">{{DETAIL_3_VALUE}}</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 12px 0 0 0;">
+                          <span style="color: #f97316; font-size: 14px; font-weight: bold;">{{DETAIL_TOTAL_LABEL}}</span>
+                        </td>
+                        <td style="padding: 12px 0 0 0; text-align: right;">
+                          <span style="color: #22c55e; font-size: 18px; font-weight: bold;">{{DETAIL_TOTAL_VALUE}}</span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Action Required Box (Optional) -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: rgba(249, 115, 22, 0.08); border-left: 4px solid {{ACTION_BORDER_COLOR}}; border-radius: 4px;">
+                <tr>
+                  <td style="padding: 15px 20px;">
+                    <p style="margin: 0 0 5px 0; color: #f97316; font-size: 14px; font-weight: bold;">
+                      {{ACTION_TITLE}}
+                    </p>
+                    <p style="margin: 0; color: #e2e8f0; font-size: 14px; line-height: 1.5;">
+                      {{ACTION_MESSAGE}}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- CTA Button (Optional) -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;" align="center">
+              <a href="{{ACTION_LINK}}" style="display: inline-block; background-color: #f97316; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 8px; box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);">
+                {{ACTION_BUTTON_TEXT}}
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Reference Info -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <p style="margin: 0; color: #64748b; font-size: 12px;">
+                Reference ID: <span style="color: #94a3b8;">{{REFERENCE_ID}}</span>
+              </p>
+              <p style="margin: 5px 0 0 0; color: #64748b; font-size: 12px;">
+                Date: <span style="color: #94a3b8;">{{NOTICE_DATE}}</span>
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Help Section -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border-radius: 6px;">
+                <tr>
+                  <td style="padding: 15px 20px;">
+                    <p style="margin: 0; color: #94a3b8; font-size: 13px; line-height: 1.5;">
+                      Questions about this notice? Contact our support team at 
+                      <a href="mailto:support@FaceBlurr.com" style="color: #f97316; text-decoration: none;">support@FaceBlurr.com</a>
+                      or visit our <a href="{{HELP_CENTER_LINK}}" style="color: #f97316; text-decoration: none;">Help Center</a>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #111827; padding: 25px 40px; border-top: 1px solid #35354d;">
+              <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                © {{YEAR}} FaceBlurr. All rights reserved.
+              </p>
+              <p style="margin: 0; color: #64748b; font-size: 11px; text-align: center;">
+                This is an automated message. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

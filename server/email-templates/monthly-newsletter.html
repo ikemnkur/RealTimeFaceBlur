@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FaceBlurr Monthly Newsletter - {{MONTH}} {{YEAR}}</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #111827; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #1e1e2e; border: 1px solid #f97316; border-radius: 8px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); padding: 30px 40px; text-align: center; border-bottom: 2px solid #f97316;">
+              <h1 style="margin: 0; color: #f97316; font-size: 28px; font-weight: bold; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);">
+                📰 FaceBlurr Monthly
+              </h1>
+              <p style="margin: 10px 0 0 0; color: #22c55e; font-size: 16px;">
+                {{MONTH}} {{YEAR}} Edition
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 30px 40px 20px 40px;">
+              <p style="margin: 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                Hey <span style="color: #22c55e; font-weight: bold;">{{USERNAME}}</span>,
+              </p>
+              <p style="margin: 15px 0 0 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                Here's what's been burning on FaceBlurr this month! New drops, platform updates, and community highlights.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Featured Announcement -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1) 0%, rgba(0, 230, 118, 0.1) 100%); border: 1px solid #f97316; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 25px;">
+                    <p style="margin: 0 0 10px 0; color: #f97316; font-size: 12px; text-transform: uppercase; letter-spacing: 2px;">
+                      🌟 Featured Update
+                    </p>
+                    <h2 style="margin: 0 0 15px 0; color: #22c55e; font-size: 22px; font-weight: bold;">
+                      {{FEATURED_TITLE}}
+                    </h2>
+                    <p style="margin: 0; color: #e2e8f0; font-size: 15px; line-height: 1.6;">
+                      {{FEATURED_DESCRIPTION}}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- New Features Section -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #f97316; font-size: 18px; border-bottom: 1px solid #35354d; padding-bottom: 10px;">
+                🚀 New Features
+              </h3>
+              
+              <!-- Feature 1 -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 15px;">
+                <tr>
+                  <td width="50" valign="top">
+                    <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 8px; text-align: center; line-height: 40px; font-size: 18px;">
+                      ✓
+                    </div>
+                  </td>
+                  <td style="padding-left: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #22c55e; font-size: 16px;">{{FEATURE_1_TITLE}}</h4>
+                    <p style="margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.5;">{{FEATURE_1_DESC}}</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Feature 2 -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin-bottom: 15px;">
+                <tr>
+                  <td width="50" valign="top">
+                    <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 8px; text-align: center; line-height: 40px; font-size: 18px;">
+                      ✓
+                    </div>
+                  </td>
+                  <td style="padding-left: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #22c55e; font-size: 16px;">{{FEATURE_2_TITLE}}</h4>
+                    <p style="margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.5;">{{FEATURE_2_DESC}}</p>
+                  </td>
+                </tr>
+              </table>
+              
+              <!-- Feature 3 -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="50" valign="top">
+                    <div style="width: 40px; height: 40px; background-color: #22c55e; border-radius: 8px; text-align: center; line-height: 40px; font-size: 18px;">
+                      ✓
+                    </div>
+                  </td>
+                  <td style="padding-left: 15px;">
+                    <h4 style="margin: 0 0 5px 0; color: #22c55e; font-size: 16px;">{{FEATURE_3_TITLE}}</h4>
+                    <p style="margin: 0; color: #94a3b8; font-size: 14px; line-height: 1.5;">{{FEATURE_3_DESC}}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Stats / Metrics Section -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #f97316; font-size: 18px; border-bottom: 1px solid #35354d; padding-bottom: 10px;">
+                📊 Your Monthly Stats
+              </h3>
+              
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td width="33%" style="padding: 5px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border: 1px solid #35354d; border-radius: 8px; text-align: center;">
+                      <tr>
+                        <td style="padding: 20px 10px;">
+                          <p style="margin: 0 0 5px 0; color: #f97316; font-size: 28px; font-weight: bold;">{{CONTRIBUTIONS_COUNT}}</p>
+                          <p style="margin: 0; color: #94a3b8; font-size: 12px;">Credits Burned</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33%" style="padding: 5px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border: 1px solid #35354d; border-radius: 8px; text-align: center;">
+                      <tr>
+                        <td style="padding: 20px 10px;">
+                          <p style="margin: 0 0 5px 0; color: #f97316; font-size: 28px; font-weight: bold;">{{CREDITS_USED}}</p>
+                          <p style="margin: 0; color: #94a3b8; font-size: 12px;">Credits Used</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td width="33%" style="padding: 5px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border: 1px solid #35354d; border-radius: 8px; text-align: center;">
+                      <tr>
+                        <td style="padding: 20px 10px;">
+                          <p style="margin: 0 0 5px 0; color: #22c55e; font-size: 28px; font-weight: bold;">{{DOWNLOADS_COUNT}}</p>
+                          <p style="margin: 0; color: #94a3b8; font-size: 12px;">Downloads</p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Tips Section -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #f97316; font-size: 18px; border-bottom: 1px solid #35354d; padding-bottom: 10px;">
+                💡 Burn Tip of the Month
+              </h3>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border-left: 4px solid #22c55e; border-radius: 4px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0; color: #e2e8f0; font-size: 15px; line-height: 1.6; font-style: italic;">
+                      "{{TIP_OF_THE_MONTH}}"
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Coming Soon Section -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #f97316; font-size: 18px; border-bottom: 1px solid #35354d; padding-bottom: 10px;">
+                🔮 Coming Soon
+              </h3>
+              <p style="margin: 0; color: #e2e8f0; font-size: 15px; line-height: 1.6;">
+                {{COMING_SOON_TEXT}}
+              </p>
+            </td>
+          </tr>
+          
+          <!-- CTA Button -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;" align="center">
+              <a href="{{DASHBOARD_LINK}}" style="display: inline-block; background-color: #22c55e; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 15px 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);">
+                Go to Dashboard →
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Social Links -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px; text-align: center;">
+              <p style="margin: 0 0 15px 0; color: #94a3b8; font-size: 14px;">Follow us for more updates:</p>
+              <a href="{{TWITTER_LINK}}" style="color: #f97316; text-decoration: none; margin: 0 10px; font-size: 14px;">Twitter</a>
+              <span style="color: #444444;">|</span>
+              <a href="{{DISCORD_LINK}}" style="color: #f97316; text-decoration: none; margin: 0 10px; font-size: 14px;">Discord</a>
+              <span style="color: #444444;">|</span>
+              <a href="{{INSTAGRAM_LINK}}" style="color: #f97316; text-decoration: none; margin: 0 10px; font-size: 14px;">Instagram</a>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #111827; padding: 25px 40px; border-top: 1px solid #35354d;">
+              <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 12px; text-align: center;">
+                © {{YEAR}} FaceBlurr. All rights reserved.
+              </p>
+              <p style="margin: 0 0 15px 0; color: #64748b; font-size: 11px; text-align: center;">
+                You're receiving this because you're a registered FaceBlurr user.
+              </p>
+              <p style="margin: 0; text-align: center;">
+                <a href="{{UNSUBSCRIBE_LINK}}" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Unsubscribe</a>
+                <span style="color: #444444; margin: 0 10px;">|</span>
+                <a href="{{PREFERENCES_LINK}}" style="color: #94a3b8; font-size: 11px; text-decoration: underline;">Email Preferences</a>
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

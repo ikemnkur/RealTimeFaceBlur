@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Tutorial</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .main { flex: 1; max-width: 860px; width: 100%; margin: 0 auto; padding: 3rem 1.5rem; }
+        .quick-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 2.5rem; }
+        .quick-link {
+            background: var(--surface);
+            border: 1px solid rgba(124,108,252,0.3);
+            color: var(--accent);
+            text-decoration: none;
+            padding: 0.85rem 1.2rem;
+            border-radius: 10px;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            letter-spacing: 0.04em;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .quick-link:hover { background: rgba(124,108,252,0.12); transform: translateY(-2px); }
+        .step {
+            background: var(--surface2);
+            border-left: 3px solid var(--accent);
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+        }
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            font-family: var(--mono);
+        }
+        .step-body strong { display: block; color: var(--text); margin-bottom: 0.3rem; font-size: 0.88rem; }
+        .step-body p { color: var(--muted); font-size: 0.8rem; line-height: 1.6; margin: 0; }
+    </style>
+    <script src="js/guard.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial" class="active">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="page-title">
+            <h1>Tutorial</h1>
+            <p>Complete guide to protecting privacy with AI-powered face blurring</p>
+        </div>
+
+        <div class="quick-links">
+            <a href="/webcam" class="quick-link">📹 Try Webcam →</a>
+            <a href="/video" class="quick-link">🎬 Try Video →</a>
+            <a href="/support" class="quick-link">💬 Get Help →</a>
+        </div>
+
+        <div class="prose-section">
+            <h2>🎥 Webcam Mode</h2>
+            <p>Real-time face blurring for live video feeds, perfect for video calls and streaming.</p>
+            <div class="step"><div class="step-number">1</div><div class="step-body"><strong>Navigate to Webcam Mode</strong><p>Click "Webcam" in the navigation or go directly to the webcam page.</p></div></div>
+            <div class="step"><div class="step-number">2</div><div class="step-body"><strong>Grant Camera Permission</strong><p>Click "Start Webcam" and allow browser access to your camera when prompted.</p></div></div>
+            <div class="step"><div class="step-number">3</div><div class="step-body"><strong>Adjust Settings</strong><p>Configure blur intensity, detection rate, and resolution to suit your needs.</p></div></div>
+            <div class="step"><div class="step-number">4</div><div class="step-body"><strong>Record (Optional)</strong><p>Click "Start Recording" to capture the blurred output. Download when finished.</p></div></div>
+            <div class="callout tip"><strong>💡 Tip:</strong> For better performance in video calls, reduce output resolution to 50% and increase the detection update rate to 300–400ms.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>🎬 Video Upload Mode</h2>
+            <p>Process pre-recorded videos with face blurring and download the results.</p>
+            <div class="step"><div class="step-number">1</div><div class="step-body"><strong>Navigate to Video Mode</strong><p>Click "Video" in the navigation menu.</p></div></div>
+            <div class="step"><div class="step-number">2</div><div class="step-body"><strong>Upload Your Video</strong><p>Click the upload area or drag and drop your video file. Supports MP4, WebM, AVI, and MOV.</p></div></div>
+            <div class="step"><div class="step-number">3</div><div class="step-body"><strong>Preview & Adjust</strong><p>The video will start playing automatically with blurred faces. Use playback controls to navigate.</p></div></div>
+            <div class="step"><div class="step-number">4</div><div class="step-body"><strong>Record Output</strong><p>Click "Start Recording Output" to capture the processed video.</p></div></div>
+            <div class="step"><div class="step-number">5</div><div class="step-body"><strong>Download</strong><p>Click "Stop &amp; Download" when finished. Your blurred video saves as a WebM file.</p></div></div>
+            <div class="callout warning"><strong>⚠️ Note:</strong> Recording is limited to 120 seconds (2 minutes). For longer videos, record in segments.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>⚙️ Settings Explained</h2>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Setting</th><th>Description</th><th>Recommendation</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Output Resolution</strong></td><td>Controls canvas output size. Lower = better performance.</td><td>50% for most uses, 25% for older devices</td></tr>
+                    <tr><td><strong>Blur Radius</strong></td><td>Intensity of the blur effect. Higher = more blur.</td><td>40–60px for adequate privacy</td></tr>
+                    <tr><td><strong>Detection Update Rate</strong></td><td>How often AI detects faces (ms). Higher = less CPU.</td><td>200ms smooth, 400ms+ for performance</td></tr>
+                    <tr><td><strong>Detection Sensitivity</strong></td><td>Confidence threshold. Higher = fewer false positives.</td><td>0.75 (default) works for most scenarios</td></tr>
+                </tbody>
+            </table>
+            <div class="callout info"><strong>ℹ️ Performance:</strong> If you experience lag, lower resolution to 25%, increase detection rate to 400–500ms, and close other applications.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>🎯 Best Practices</h2>
+            <h3>For Real-Time Webcam Use</h3>
+            <ul>
+                <li>Use good lighting for better face detection accuracy</li>
+                <li>Position yourself front-facing to the camera</li>
+                <li>Avoid rapid head movements for smoother blur tracking</li>
+                <li>Test settings before joining video calls</li>
+                <li>Close unnecessary browser tabs and applications</li>
+            </ul>
+            <h3>For Video Processing</h3>
+            <ul>
+                <li>Use original resolution (100%) for final outputs</li>
+                <li>Preview the entire video before recording</li>
+                <li>Adjust blur radius based on video quality and face size</li>
+                <li>For long videos, process in 2-minute segments</li>
+            </ul>
+            <h3>Privacy Considerations</h3>
+            <ul>
+                <li>All processing happens locally in your browser</li>
+                <li>No video data is uploaded to any server</li>
+                <li>Clear browser cache if working with sensitive content</li>
+                <li>Blur effect may not be perfect in all scenarios — always verify</li>
+            </ul>
+        </div>
+
+        <div class="prose-section">
+            <h2>🔧 Troubleshooting</h2>
+            <h3>Camera not working?</h3>
+            <ul>
+                <li>Check browser permissions for camera access</li>
+                <li>Ensure no other app is using the camera</li>
+                <li>Refresh the page and grant permission again</li>
+                <li>Try a different browser (Chrome offers best performance)</li>
+            </ul>
+            <h3>Performance issues?</h3>
+            <ul>
+                <li>Lower output resolution to 25%</li>
+                <li>Increase detection update rate to 400–500ms</li>
+                <li>Close other browser tabs and applications</li>
+            </ul>
+            <h3>Faces not detected?</h3>
+            <ul>
+                <li>Ensure adequate lighting on faces</li>
+                <li>Lower the detection sensitivity setting</li>
+                <li>Make sure faces are clearly visible and front-facing</li>
+                <li>Check that the AI model loaded (status indicator shows "Ready")</li>
+            </ul>
+            <div class="callout info"><strong>ℹ️ Still having issues?</strong> Visit the <a href="/support">support page</a> for more help or to report a bug.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>❓ Frequently Asked Questions</h2>
+            <h3>Is my video data sent to a server?</h3>
+            <p>No. All processing runs locally via TensorFlow.js. Your video never leaves your device.</p>
+            <h3>Which browsers are supported?</h3>
+            <p>Modern Chrome, Firefox, Edge, and Safari. Chrome generally offers the best performance.</p>
+            <h3>Why is there a 120-second recording limit?</h3>
+            <p>This prevents excessive browser memory usage. Record in multiple segments for longer videos.</p>
+            <h3>What AI model is used?</h3>
+            <p>Google's BlazeFace model via TensorFlow.js — fast, lightweight, and runs entirely in the browser.</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a> · <a href="/login">Sign In</a>
+    </footer>
+</body>
+</html>

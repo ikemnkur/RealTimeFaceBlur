@@ -1,0 +1,13 @@
+{
+  "name": "faceblurr-app",
+  "version": "1.0.0",
+  "description": "FaceBlurr — real-time AI face blurring frontend",
+  "scripts": {
+    "dev": "vite --port 5174 --host",
+    "build": "vite build",
+    "preview": "vite preview --port 5174"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

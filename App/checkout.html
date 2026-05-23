@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Subscribe</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 3rem 1.5rem 4rem; }
+
+        /* ── Page header ── */
+        .checkout-header { text-align: center; margin-bottom: 2.75rem; }
+        .checkout-header .eyebrow {
+            display: inline-block;
+            font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent); background: rgba(124,108,252,0.1);
+            border: 1px solid rgba(124,108,252,0.25);
+            padding: 0.3rem 0.85rem; border-radius: 999px; margin-bottom: 1rem;
+        }
+        .checkout-header h1 {
+            font-family: var(--display); font-size: clamp(1.8rem,5vw,2.8rem);
+            font-weight: 800; letter-spacing: -0.04em; line-height: 1.1;
+            margin-bottom: 0.75rem;
+        }
+        .checkout-header h1 span { background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .checkout-header p { font-size: 0.85rem; color: var(--muted); }
+
+        /* ── Plan grid ── */
+        .plan-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 1.25rem;
+            width: 100%; max-width: 940px;
+            margin-bottom: 2rem;
+        }
+
+        .plan-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 1.75rem;
+            display: flex; flex-direction: column; gap: 0.6rem;
+            position: relative;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .plan-card.popular {
+            border-color: rgba(124,108,252,0.5);
+            background: linear-gradient(160deg, rgba(124,108,252,0.06) 0%, rgba(192,132,252,0.04) 100%);
+            box-shadow: 0 0 0 1px rgba(124,108,252,0.15), 0 20px 60px rgba(124,108,252,0.1);
+        }
+
+        .plan-card.selected {
+            border-color: var(--accent) !important;
+            box-shadow: 0 0 0 2px rgba(124,108,252,0.35), 0 20px 60px rgba(124,108,252,0.15) !important;
+        }
+
+        .plan-badge {
+            position: absolute; top: -0.6rem; left: 50%; transform: translateX(-50%);
+            font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+            background: var(--accent); color: #fff;
+            padding: 0.2rem 0.8rem; border-radius: 999px;
+        }
+
+        .plan-card .plan-name { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+        .plan-card .plan-price {
+            font-family: var(--display); font-size: 2.4rem; font-weight: 800;
+            letter-spacing: -0.04em; color: var(--text); line-height: 1;
+        }
+        .plan-card .plan-price .per { font-family: var(--mono); font-size: 0.78rem; font-weight: 400; color: var(--muted); }
+        .plan-card .plan-desc { font-size: 0.76rem; color: var(--muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.25rem; }
+        .plan-card ul { list-style: none; display: flex; flex-direction: column; gap: 0.45rem; margin-top: 0.5rem; }
+        .plan-card ul li { font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+        .plan-card ul li::before { content: '✓'; color: var(--green); font-size: 0.7rem; flex-shrink: 0; }
+        .plan-card ul li.unavail::before { content: '✗'; color: var(--red); }
+        .plan-card ul li.unavail { text-decoration: line-through; opacity: 0.5; }
+
+        .plan-card .plan-action { margin-top: auto; padding-top: 1.25rem; }
+        .plan-card .plan-btn {
+            display: block; width: 100%; text-align: center;
+            font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.7rem; border-radius: 9px;
+            border: 1px solid var(--border); cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, color 0.2s;
+            background: var(--surface2); color: var(--text);
+        }
+        .plan-card .plan-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .plan-card.popular .plan-btn, .plan-card .plan-btn.primary {
+            background: var(--accent); border-color: var(--accent); color: #fff;
+        }
+        .plan-card.popular .plan-btn:hover, .plan-card .plan-btn.primary:hover {
+            background: var(--accent2); border-color: var(--accent2);
+        }
+        .plan-btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        .plan-btn.current-plan {
+            background: var(--surface2); border-color: var(--green); color: var(--green); cursor: default;
+        }
+        .plan-btn.current-plan:hover { background: var(--surface2); border-color: var(--green); color: var(--green); }
+
+        /* ── Loading spinner ── */
+        .spinner {
+            display: inline-block; width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+            border-radius: 50%; animation: spin 0.7s linear infinite;
+            vertical-align: middle; margin-right: 0.4rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Status message ── */
+        #checkout-status {
+            font-size: 0.78rem; min-height: 1.2rem; text-align: center;
+            color: var(--muted); margin-top: 0.5rem;
+        }
+        #checkout-status.error { color: var(--red); }
+        #checkout-status.success { color: var(--green); }
+
+        /* ── Current user pill ── */
+        .user-pill {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.74rem; color: var(--muted);
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 0.3rem 0.9rem;
+            margin-bottom: 2rem;
+        }
+        .user-pill strong { color: var(--accent); }
+
+        /* ── Guarantee strip ── */
+        .guarantee {
+            font-size: 0.72rem; color: var(--muted); text-align: center;
+            display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center;
+            margin-top: 0.5rem;
+        }
+        .guarantee span { display: flex; align-items: center; gap: 0.35rem; }
+
+        /* ── Manage billing link ── */
+        #manage-billing { display: none; text-align: center; margin-top: 1rem; }
+        #manage-billing a { font-size: 0.75rem; color: var(--muted); text-decoration: underline; }
+        #manage-billing a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="checkout-header">
+            <div class="eyebrow">✦ Upgrade your plan</div>
+            <h1>Choose your<br><span>Face Blur</span> plan</h1>
+            <p>All plans include a 14-day money-back guarantee. Cancel anytime.</p>
+        </div>
+
+        <div id="user-info" class="user-pill" style="display:none">
+            Signed in as <strong id="user-email">—</strong> &nbsp;·&nbsp;
+            Current plan: <strong id="current-plan-label">Free</strong>
+        </div>
+
+        <div class="plan-grid" id="plan-grid">
+            <!-- Plans injected by JS -->
+            <div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:0.8rem;padding:2rem">
+                Loading plans…
+            </div>
+        </div>
+
+        <div id="checkout-status"></div>
+
+        <div id="manage-billing">
+            <a href="#" id="manage-billing-link">Manage billing &amp; cancel subscription →</a>
+        </div>
+
+        <div class="guarantee">
+            <span>🔒 Secure payment via Stripe</span>
+            <span>↩️ 14-day money-back guarantee</span>
+            <span>❌ Cancel anytime</span>
+            <span>🛡️ No hidden fees</span>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a>
+    </footer>
+
+    <script>
+    (async function () {
+        const _h = window.location.hostname;
+        const _dev = _h === 'localhost' || _h === '127.0.0.1' || _h.endsWith('.local');
+        const API      = _dev ? 'http://localhost:4000' : 'https://server.faceblurr.com';
+        const FRONTEND = _dev ? 'http://localhost:5174'  : 'https://faceblurr.com';
+
+        /* ── URL params ── */
+        const params    = new URLSearchParams(location.search);
+        const preselect = params.get('plan') || null;   // 'pro' or 'advanced'
+        const returnTo  = params.get('return') || FRONTEND + '/video-pro';
+
+        /* ── Auth ── */
+        const auth = window.FaceBlurAuth.getAuth();
+        if (auth) {
+            document.getElementById('user-info').style.display = 'inline-flex';
+            document.getElementById('user-email').textContent  = auth.email;
+            document.getElementById('current-plan-label').textContent =
+                { free: 'Free', pro: 'Pro', advanced: 'Advanced' }[auth.accountType] || auth.accountType;
+
+            /* Update nav */
+            const navLink = document.getElementById('nav-auth-link');
+            navLink.textContent = auth.username || auth.email;
+        }
+
+        /* ── Fetch plan data from server ── */
+        let plans = [];
+        try {
+            const r = await fetch(`${API}/api/subscription/plans`);
+            const d = await r.json();
+            plans = d.plans || [];
+        } catch {
+            setStatus('Failed to load plans. Is the server running?', 'error');
+            return;
+        }
+
+        /* ── Render plan cards ── */
+        const grid = document.getElementById('plan-grid');
+        grid.innerHTML = '';
+
+        const userPlan = auth?.accountType || 'free';
+        const PLAN_RANK = { free: 0, pro: 1, advanced: 2 };
+
+        plans.forEach(plan => {
+            const isCurrentPlan = plan.id === userPlan;
+            const isLower       = PLAN_RANK[plan.id] < PLAN_RANK[userPlan];
+            const isPopular     = plan.id === 'pro';
+            const isPreselected = plan.id === preselect;
+
+            const featureHtml = (plan.features || []).map(f =>
+                `<li>${f}</li>`
+            ).join('');
+
+            let btnHtml;
+            if (plan.id === 'free') {
+                if (isCurrentPlan) {
+                    btnHtml = `<button class="plan-btn current-plan" disabled>✓ Current Plan</button>`;
+                } else if (isLower) {
+                    btnHtml = `<button class="plan-btn" disabled>Downgrade</button>`;
+                } else {
+                    btnHtml = `<a href="/video" class="plan-btn">Continue Free</a>`;
+                }
+            } else if (isCurrentPlan) {
+                btnHtml = `<button class="plan-btn current-plan" disabled>✓ Current Plan</button>`;
+            } else if (isLower) {
+                btnHtml = `<button class="plan-btn" onclick="handleDowngrade('${plan.id}')">Downgrade to ${plan.name}</button>`;
+            } else {
+                const cls = isPopular ? 'primary' : '';
+                btnHtml = `<button class="plan-btn ${cls}" id="btn-${plan.id}" onclick="handleCheckout('${plan.id}', '${plan.name}')">
+                    ✦ Upgrade to ${plan.name}
+                </button>`;
+            }
+
+            const card = document.createElement('div');
+            card.className = `plan-card${isPopular ? ' popular' : ''}${isPreselected ? ' selected' : ''}`;
+            card.innerHTML = `
+                ${isPopular ? '<div class="plan-badge">Most Popular</div>' : ''}
+                <div class="plan-name">${plan.name}</div>
+                <div class="plan-price">$${plan.price} <span class="per">/ month</span></div>
+                <div class="plan-desc">${plan.description || ''}</div>
+                <ul>${featureHtml}</ul>
+                <div class="plan-action">${btnHtml}</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        /* ── Checkout ── */
+        window.handleCheckout = async function (planId, planName) {
+            if (!auth) {
+                location.href = `/login?return=${encodeURIComponent(location.href)}`;
+                return;
+            }
+
+            const btn = document.getElementById('btn-' + planId);
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner"></span>Redirecting to Stripe…';
+            }
+            setStatus('Creating checkout session…');
+
+            try {
+                const res = await fetch(`${API}/api/subscription/create-checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${localStorage.getItem('fb_token')}`
+                    },
+                    body: JSON.stringify({
+                        userId:     auth.id,
+                        username:   auth.username,
+                        email:      auth.email,
+                        planId:     planId,
+                        planName:   planName,
+                        successUrl: `${FRONTEND}/success?plan=${planId}&return=${encodeURIComponent(returnTo)}&session_id={CHECKOUT_SESSION_ID}`,
+                        cancelUrl:  `${FRONTEND}/checkout?plan=${planId}&cancelled=1`
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Checkout failed');
+                }
+
+                setStatus('Redirecting to Stripe…', 'success');
+                window.location.href = data.url;
+
+            } catch (err) {
+                setStatus('Error: ' + err.message, 'error');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `✦ Upgrade to ${planName}`;
+                }
+            }
+        };
+
+        window.handleDowngrade = function (planId) {
+            setStatus('To downgrade, please contact support@faceblur.app', '');
+        };
+
+        function setStatus(msg, type) {
+            const el = document.getElementById('checkout-status');
+            el.textContent = msg;
+            el.className = type ? type : '';
+        }
+
+        /* ── Cancelled notice ── */
+        if (params.get('cancelled')) {
+            setStatus('Checkout was cancelled. No charge was made.', '');
+        }
+
+    })();
+    </script>
+</body>
+</html>

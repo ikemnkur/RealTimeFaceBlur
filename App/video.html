@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Video Modes</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1;
+            max-width: 980px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        /* ── Page header ── */
+        .picker-header { text-align: center; }
+        .picker-header h1 {
+            font-family: var(--display);
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+        }
+        .picker-header p {
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-top: 0.65rem;
+            line-height: 1.7;
+            max-width: 480px;
+            margin-inline: auto;
+        }
+
+        /* ── Mode cards ── */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+            gap: 1.2rem;
+            width: 100%;
+        }
+
+        .mode-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2rem 1.8rem 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.1rem;
+            cursor: pointer;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.25s;
+            border-radius: 20px;
+        }
+        .mode-card.free::before   { background: radial-gradient(ellipse at top left, rgba(34,211,160,0.06), transparent 60%); }
+        .mode-card.pro::before    { background: radial-gradient(ellipse at top left, rgba(124,108,252,0.08), transparent 60%); }
+        .mode-card.adv::before    { background: radial-gradient(ellipse at top left, rgba(192,132,252,0.08), transparent 60%); }
+
+        .mode-card:hover { transform: translateY(-4px); }
+        .mode-card.free:hover  { border-color: rgba(34,211,160,0.4);  box-shadow: 0 12px 48px rgba(34,211,160,0.08); }
+        .mode-card.pro:hover   { border-color: rgba(124,108,252,0.5); box-shadow: 0 12px 48px rgba(124,108,252,0.12); }
+        .mode-card.adv:hover   { border-color: rgba(192,132,252,0.5); box-shadow: 0 12px 48px rgba(192,132,252,0.1); }
+        .mode-card:hover::before { opacity: 1; }
+
+        /* Locked state */
+        .mode-card.locked { opacity: 0.75; }
+        .mode-card.locked:hover { transform: none; box-shadow: none; }
+        .mode-card.locked:hover::before { opacity: 0; }
+
+        /* Top row: badge + lock icon */
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .mode-badge {
+            font-size: 0.65rem; letter-spacing: 0.1em;
+            text-transform: uppercase; font-weight: 700;
+            padding: 0.25rem 0.7rem; border-radius: 999px;
+        }
+        .mode-badge.free     { background: rgba(34,211,160,0.12);  color: var(--green); }
+        .mode-badge.pro      { background: rgba(124,108,252,0.15); color: var(--accent); }
+        .mode-badge.advanced { background: rgba(192,132,252,0.15); color: var(--accent2); }
+
+        .lock-icon { font-size: 1rem; opacity: 0.4; }
+        .check-icon { font-size: 0.9rem; color: var(--green); }
+
+        /* Mode title */
+        .mode-icon { font-size: 2.2rem; line-height: 1; }
+        .mode-title {
+            font-family: var(--display);
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text);
+        }
+        .mode-price {
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: -0.6rem;
+        }
+
+        /* Feature list */
+        .mode-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            flex: 1;
+        }
+        .mode-features li {
+            font-size: 0.75rem;
+            color: var(--muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            line-height: 1.5;
+        }
+        .mode-features li .fi { flex-shrink: 0; }
+        .mode-features li .fi.yes { color: var(--green); }
+        .mode-features li .fi.no  { opacity: 0.3; }
+
+        /* CTA button */
+        .mode-cta {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-family: var(--mono);
+            font-size: 0.76rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.18s, border-color 0.18s, color 0.18s;
+        }
+        .mode-cta.cta-free {
+            background: rgba(34,211,160,0.1);
+            border-color: rgba(34,211,160,0.35);
+            color: var(--green);
+        }
+        .mode-cta.cta-free:hover { background: rgba(34,211,160,0.2); }
+
+        .mode-cta.cta-pro {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .mode-cta.cta-pro:hover { background: #9580ff; }
+
+        .mode-cta.cta-adv {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            color: #fff;
+        }
+        .mode-cta.cta-adv:hover { background: #d4a0ff; }
+
+        .mode-cta.cta-locked {
+            background: transparent;
+            border-color: rgba(255,255,255,0.1);
+            color: var(--muted);
+        }
+        .mode-cta.cta-locked:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Pill label: "Your plan" */
+        .your-plan-chip {
+            font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase;
+            font-weight: 700; padding: 0.15rem 0.55rem; border-radius: 999px;
+            background: rgba(34,211,160,0.12); color: var(--green);
+            border: 1px solid rgba(34,211,160,0.3);
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video" class="active">Video</a></li>
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="picker-header">
+            <h1>Video <span class="gradient-text">Face Blur</span></h1>
+            <p>Choose a processing mode. All modes run entirely in your browser — your video never leaves your device.</p>
+        </div>
+
+        <div class="mode-grid" id="mode-grid">
+
+            <!-- Free -->
+            <div class="mode-card free" id="card-free" onclick="selectMode('free')">
+                <div class="card-top">
+                    <span class="mode-badge free">Free</span>
+                    <span class="check-icon" id="check-free" style="display:none">✓ Your Plan</span>
+                </div>
+                <div class="mode-icon">🎬</div>
+                <div class="mode-title">Standard</div>
+                <div class="mode-price">Free · No sign-in required</div>
+                <ul class="mode-features">
+                    <li><span class="fi yes">✓</span> Upload MP4, WebM, MOV, AVI</li>
+                    <li><span class="fi yes">✓</span> Auto face detection (BlazeFace)</li>
+                    <li><span class="fi yes">✓</span> Gaussian or pixelate blur</li>
+                    <li><span class="fi yes">✓</span> Adjustable blur intensity</li>
+                    <li><span class="fi yes">✓</span> Frame-by-frame preview</li>
+                    <li><span class="fi no">✕</span> High-res processing</li>
+                    <li><span class="fi no">✕</span> Multi-face tracking</li>
+                </ul>
+                <button class="mode-cta cta-free">Start Free →</button>
+            </div>
+
+            <!-- Pro -->
+            <div class="mode-card pro" id="card-pro" onclick="selectMode('pro')">
+                <div class="card-top">
+                    <span class="mode-badge pro">Pro</span>
+                    <span id="check-pro" style="display:none"></span>
+                </div>
+                <div class="mode-icon">⚡</div>
+                <div class="mode-title">Pro</div>
+                <div class="mode-price">$2.99/mo</div>
+                <ul class="mode-features">
+                    <li><span class="fi yes">✓</span> Everything in Standard</li>
+                    <li><span class="fi yes">✓</span> Higher-resolution output</li>
+                    <li><span class="fi yes">✓</span> Detection sensitivity tuning</li>
+                    <li><span class="fi yes">✓</span> Multiple blur shape options</li>
+                    <li><span class="fi yes">✓</span> Batch frame processing</li>
+                    <li><span class="fi yes">✓</span> Export quality settings</li>
+                    <li><span class="fi no">✕</span> Identity-level face tracking</li>
+                </ul>
+                <button class="mode-cta cta-pro" id="cta-pro">Unlock Pro →</button>
+            </div>
+
+            <!-- Advanced -->
+            <div class="mode-card adv" id="card-adv" onclick="selectMode('advanced')">
+                <div class="card-top">
+                    <span class="mode-badge advanced">Advanced</span>
+                    <span id="check-adv" style="display:none"></span>
+                </div>
+                <div class="mode-icon">✦</div>
+                <div class="mode-title">Advanced</div>
+                <div class="mode-price">$4.99/mo</div>
+                <ul class="mode-features">
+                    <li><span class="fi yes">✓</span> Everything in Pro</li>
+                    <li><span class="fi yes">✓</span> Multi-face identity tracking</li>
+                    <li><span class="fi yes">✓</span> Custom redaction shapes</li>
+                    <li><span class="fi yes">✓</span> Priority frame processing</li>
+                    <li><span class="fi yes">✓</span> Export with metadata</li>
+                    <li><span class="fi yes">✓</span> Early access to new features</li>
+                    <li><span class="fi yes">✓</span> Concierge support</li>
+                </ul>
+                <button class="mode-cta cta-adv" id="cta-adv">Unlock Advanced →</button>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>◈ Face Blur &nbsp;·&nbsp; <a href="/support">Support</a> &nbsp;·&nbsp; <a href="/tutorial">Tutorial</a></p>
+    </footer>
+
+    <script>
+        const PLAN_RANK = { free: 0, pro: 1, advanced: 2 };
+
+        /* ── Reflect current plan state in the cards ── */
+        document.addEventListener('DOMContentLoaded', () => {
+            const auth = FaceBlurAuth.getAuth();
+            const plan = auth?.accountType || 'free';
+            const rank = PLAN_RANK[plan] || 0;
+
+            /* Mark currently owned plan */
+            const checkIds = { free: 'check-free', pro: 'check-pro', adv: 'check-adv' };
+            const planToCard = { free: 'free', pro: 'pro', advanced: 'adv' };
+            const key = planToCard[plan];
+            if (key) {
+                const el = document.getElementById(checkIds[key]);
+                if (el) {
+                    el.innerHTML = '<span class="your-plan-chip">✓ Your Plan</span>';
+                    el.style.display = 'inline';
+                }
+            }
+
+            /* Update Pro CTA */
+            const ctaPro = document.getElementById('cta-pro');
+            if (rank >= 1) {
+                ctaPro.textContent = 'Open Pro →';
+                ctaPro.className   = 'mode-cta cta-pro';
+            }
+
+            /* Update Advanced CTA */
+            const ctaAdv = document.getElementById('cta-adv');
+            if (rank >= 2) {
+                ctaAdv.textContent = 'Open Advanced →';
+                ctaAdv.className   = 'mode-cta cta-adv';
+            }
+
+            /* Dim cards user can't access */
+            if (rank < 1) document.getElementById('card-pro').classList.add('locked');
+            if (rank < 2) document.getElementById('card-adv').classList.add('locked');
+        });
+
+        /* ── Card click handler ── */
+        function selectMode(mode) {
+            const auth = FaceBlurAuth.getAuth();
+            const rank = PLAN_RANK[auth?.accountType] ?? 0;
+
+            if (mode === 'free') {
+                window.location.href = '/video-free';
+                return;
+            }
+            if (mode === 'pro') {
+                if (rank >= 1) {
+                    window.location.href = '/video-pro';
+                } else {
+                    window.location.href = '/plans';
+                }
+                return;
+            }
+            if (mode === 'advanced') {
+                if (rank >= 2) {
+                    window.location.href = '/video-advanced';
+                } else {
+                    window.location.href = '/plans';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

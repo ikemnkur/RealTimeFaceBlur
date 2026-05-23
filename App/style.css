@@ -1,0 +1,512 @@
+/* ══════════════════════════════════════════════════
+   Face Blur — Master Stylesheet
+   Shared design tokens, layout, nav, buttons, forms
+   ══════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
+
+/* ── Variables ─────────────────────────────────── */
+:root {
+    --bg:       #0d0d12;
+    --surface:  #14141c;
+    --surface2: #1c1c28;
+    --border:   rgba(255, 255, 255, 0.07);
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --accent:   #7c6cfc;
+    --accent2:  #c084fc;
+    --green:    #22d3a0;
+    --red:      #f87171;
+    --yellow:   #fbbf24;
+    --mono:     'DM Mono', monospace;
+    --display:  'Syne', sans-serif;
+}
+
+/* ── Reset ─────────────────────────────────────── */
+*, *::before, *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ── Base ──────────────────────────────────────── */
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--mono);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ── Nav ───────────────────────────────────────── */
+nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-family: var(--display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+}
+
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+nav a {
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+}
+
+nav a:hover,
+nav a.active {
+    color: var(--text);
+}
+
+nav a.nav-cta {
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.3rem 0.75rem;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+}
+
+nav a.nav-cta:hover {
+    background: var(--accent);
+    color: #fff;
+}
+
+/* Plan-gated nav links */
+nav a.nav-pro {
+    color: var(--accent);
+}
+nav a.nav-pro:hover { color: var(--accent2); }
+
+nav a.nav-adv {
+    color: var(--accent2);
+}
+nav a.nav-adv:hover { color: var(--accent); }
+
+/* ── Buttons ───────────────────────────────────── */
+button, .btn {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 0.55rem 1.2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text);
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    line-height: normal;
+}
+
+button:hover:not(:disabled),
+.btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+button.btn-primary,
+.btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+button.btn-primary:hover:not(:disabled),
+.btn-primary:hover {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff;
+}
+
+button.btn-danger,
+.btn-danger {
+    border-color: var(--red);
+    color: var(--red);
+}
+
+button.btn-danger:hover:not(:disabled),
+.btn-danger:hover {
+    background: rgba(248, 113, 113, 0.1);
+}
+
+button.btn-green,
+.btn-green {
+    border-color: var(--green);
+    color: var(--green);
+}
+
+button.btn-green:hover:not(:disabled),
+.btn-green:hover {
+    background: rgba(34, 211, 160, 0.1);
+}
+
+button.btn-active,
+.btn-active {
+    background: rgba(124, 108, 252, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* ── Status pill ───────────────────────────────── */
+#status {
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    padding: 0.4rem 1rem;
+    border-radius: 999px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    transition: all 0.3s;
+}
+
+#status.ready    { border-color: var(--green);  color: var(--green);  }
+#status.active   { border-color: var(--accent); color: var(--accent); }
+#status.recording{ border-color: var(--red);    color: var(--red);    }
+#status.error    { border-color: var(--red);    color: var(--red);    }
+
+/* ── Footer ────────────────────────────────────── */
+footer {
+    text-align: center;
+    padding: 1.2rem;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+}
+
+footer a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+footer a:hover { text-decoration: underline; }
+
+/* ── Page title ────────────────────────────────── */
+.page-title {
+    font-family: var(--display);
+    font-size: clamp(1.6rem, 5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    text-align: center;
+}
+
+.page-title span,
+.gradient-text {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ── Surface card ──────────────────────────────── */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+}
+
+.card-hover {
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.card-hover:hover {
+    transform: translateY(-3px);
+    border-color: rgba(124, 108, 252, 0.35);
+    box-shadow: 0 12px 40px rgba(124, 108, 252, 0.12);
+}
+
+/* ── Prose content (tutorial / support) ───────── */
+.prose-page {
+    flex: 1;
+    max-width: 860px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 4rem;
+}
+
+.prose-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.prose-section h2 {
+    font-family: var(--display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.prose-section h3 {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text);
+    margin: 1.25rem 0 0.6rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.prose-section p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.9;
+    margin-bottom: 0.9rem;
+}
+
+.prose-section ul,
+.prose-section ol {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.9;
+    margin: 0 0 0.9rem 1.5rem;
+}
+
+.prose-section li { margin-bottom: 0.3rem; }
+
+/* ── Step block ────────────────────────────────── */
+.step {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 1rem 1.25rem;
+    margin: 0.8rem 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.8;
+}
+
+.step strong { color: var(--text); }
+
+.step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* ── Callout boxes ─────────────────────────────── */
+.callout {
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+    margin: 0.8rem 0;
+    font-size: 0.8rem;
+    line-height: 1.8;
+}
+
+.callout.tip     { background: rgba(34, 211, 160, 0.08);  border-left: 3px solid var(--green);  color: var(--muted); }
+.callout.warning { background: rgba(251, 191, 36, 0.08);  border-left: 3px solid var(--yellow); color: var(--muted); }
+.callout.info    { background: rgba(124, 108, 252, 0.08); border-left: 3px solid var(--accent); color: var(--muted); }
+.callout.danger  { background: rgba(248, 113, 113, 0.08); border-left: 3px solid var(--red);    color: var(--muted); }
+
+.callout strong  { color: var(--text); }
+
+/* ── Table ─────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin: 1rem 0;
+}
+
+.data-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.7rem;
+    padding: 0.6rem 0.9rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+    padding: 0.6rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.data-table td strong { color: var(--text); }
+.data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ── Badge / pill ──────────────────────────────── */
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.badge-accent  { background: rgba(124,108,252,0.15); color: var(--accent); border: 1px solid rgba(124,108,252,0.3); }
+.badge-green   { background: rgba(34,211,160,0.12);  color: var(--green);  border: 1px solid rgba(34,211,160,0.25); }
+.badge-muted   { background: var(--surface2);         color: var(--muted);  border: 1px solid var(--border); }
+
+/* ── Form elements ─────────────────────────────── */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-group label {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.form-input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 0.65rem 0.9rem;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 108, 252, 0.15);
+}
+
+.form-input::placeholder { color: var(--muted); }
+
+.form-input.error { border-color: var(--red); }
+
+.field-error {
+    font-size: 0.7rem;
+    color: var(--red);
+    margin-top: 0.1rem;
+}
+
+/* ── Modal ─────────────────────────────────────── */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.75rem;
+    width: min(480px, calc(100vw - 2rem));
+    position: relative;
+    box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
+}
+
+.modal-close {
+    position: absolute;
+    top: 0.9rem;
+    right: 0.9rem;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.1rem;
+    line-height: 1;
+    padding: 0.25rem 0.4rem;
+    cursor: pointer;
+    border-radius: 6px;
+}
+
+.modal-close:hover { color: var(--text); background: var(--surface2); }
+
+/* ── Divider ───────────────────────────────────── */
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+/* ── Responsive nav ────────────────────────────── */
+@media (max-width: 640px) {
+    nav ul { gap: 0.9rem; }
+    nav a  { font-size: 0.7rem; }
+}
+
+@media (max-width: 480px) {
+    nav {
+        flex-direction: column;
+        gap: 0.7rem;
+        padding: 0.8rem 1rem;
+    }
+}

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Plans & Billing</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1;
+            max-width: 900px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .page-header { text-align: center; }
+        .page-header h1 {
+            font-family: var(--display);
+            font-size: clamp(1.6rem, 5vw, 2.2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+        .page-header p { color: var(--muted); font-size: 0.82rem; margin-top: 0.5rem; }
+
+        /* ── Current plan banner ── */
+        .current-banner {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.4rem 1.6rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .current-banner .left { display: flex; flex-direction: column; gap: 0.3rem; }
+        .current-banner .label {
+            font-size: 0.68rem; letter-spacing: 0.1em;
+            text-transform: uppercase; color: var(--muted);
+        }
+        .current-banner .plan-name {
+            font-family: var(--display); font-size: 1.3rem;
+            font-weight: 800; color: var(--text);
+        }
+        .current-banner .plan-name.pro      { color: var(--accent); }
+        .current-banner .plan-name.advanced { color: var(--accent2); }
+        .current-banner .plan-name.free     { color: var(--muted); }
+        #manage-billing-btn { display: none; }
+
+        /* ── Plan cards grid ── */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.2rem;
+        }
+        .plan-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .plan-card.current {
+            border-color: rgba(124,108,252,0.5);
+            box-shadow: 0 0 0 1px rgba(124,108,252,0.15);
+        }
+        .plan-card.current-advanced {
+            border-color: rgba(192,132,252,0.5);
+            box-shadow: 0 0 0 1px rgba(192,132,252,0.15);
+        }
+        .plan-tag {
+            font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+            font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 999px;
+            align-self: flex-start;
+        }
+        .plan-tag.free     { background: rgba(100,116,139,0.15); color: var(--muted); }
+        .plan-tag.pro      { background: rgba(124,108,252,0.2); color: var(--accent); }
+        .plan-tag.advanced { background: rgba(192,132,252,0.2); color: var(--accent2); }
+        .plan-tag.active   { background: rgba(34,211,160,0.15); color: var(--green); }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+        .plan-price .amount {
+            font-family: var(--display); font-size: 2rem;
+            font-weight: 800; color: var(--text);
+        }
+        .plan-price .per {
+            font-size: 0.72rem; color: var(--muted);
+        }
+
+        .plan-name-title {
+            font-family: var(--display); font-size: 1rem;
+            font-weight: 700; color: var(--text); margin-bottom: -0.5rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        .plan-features li {
+            font-size: 0.75rem;
+            color: var(--muted);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            line-height: 1.5;
+        }
+        .plan-features li .tick { color: var(--green); flex-shrink: 0; }
+        .plan-features li .lock { color: var(--muted); opacity: 0.4; flex-shrink: 0; }
+
+        .plan-cta {
+            display: block;
+            text-align: center;
+            padding: 0.65rem 1rem;
+            border-radius: 9px;
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: background 0.18s, border-color 0.18s, color 0.18s;
+            background: transparent;
+            color: var(--text);
+        }
+        .plan-cta.active-plan {
+            background: rgba(34,211,160,0.08);
+            border-color: var(--green);
+            color: var(--green);
+            cursor: default;
+        }
+        .plan-cta.upgrade-pro {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+        }
+        .plan-cta.upgrade-pro:hover { background: #9580ff; border-color: #9580ff; }
+        .plan-cta.upgrade-adv {
+            background: var(--accent2);
+            border-color: var(--accent2);
+            color: #fff;
+        }
+        .plan-cta.upgrade-adv:hover { background: #d4a0ff; border-color: #d4a0ff; }
+        .plan-cta.downgrade {
+            color: var(--muted);
+            border-color: rgba(255,255,255,0.08);
+        }
+
+        /* ── FAQ ── */
+        .faq { display: flex; flex-direction: column; gap: 0.75rem; }
+        .faq-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.2rem;
+        }
+        .faq-q {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+        .faq-a {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.65;
+        }
+        .faq-a a { color: var(--accent); text-decoration: none; }
+        .faq-a a:hover { text-decoration: underline; }
+
+        .section-title {
+            font-family: var(--display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="page-header">
+            <h1>Plans &amp; <span class="gradient-text">Billing</span></h1>
+            <p>Choose the plan that fits your needs. Cancel or upgrade anytime.</p>
+        </div>
+
+        <!-- Current plan banner -->
+        <div class="current-banner">
+            <div class="left">
+                <span class="label">Your current plan</span>
+                <span class="plan-name free" id="current-plan-name">Free</span>
+                <span style="font-size:0.72rem;color:var(--muted)" id="current-plan-sub">Basic face blurring tools</span>
+            </div>
+            <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+                <button id="manage-billing-btn" class="btn" onclick="openPortal()">Manage Billing →</button>
+                <a href="/dashboard" class="btn">← Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Plan cards -->
+        <div>
+            <div class="section-title">Available Plans</div>
+            <div class="plans-grid">
+
+                <!-- Free -->
+                <div class="plan-card" id="card-free">
+                    <span class="plan-tag free">Free</span>
+                    <div class="plan-name-title">Starter</div>
+                    <div class="plan-price">
+                        <span class="amount">$0</span>
+                        <span class="per">/mo</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="tick">✓</span> Webcam real-time blur</li>
+                        <li><span class="tick">✓</span> Video file upload &amp; blur</li>
+                        <li><span class="tick">✓</span> Runs 100% in-browser</li>
+                        <li><span class="tick">✓</span> No data leaves your device</li>
+                        <li><span class="lock">✕</span> Pro processing quality</li>
+                        <li><span class="lock">✕</span> Advanced tracking features</li>
+                    </ul>
+                    <button class="plan-cta active-plan" id="cta-free" disabled>✓ Current Plan</button>
+                </div>
+
+                <!-- Pro -->
+                <div class="plan-card" id="card-pro">
+                    <span class="plan-tag pro">Pro</span>
+                    <div class="plan-name-title">Pro</div>
+                    <div class="plan-price">
+                        <span class="amount">$2.99</span>
+                        <span class="per">/mo</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="tick">✓</span> Everything in Free</li>
+                        <li><span class="tick">✓</span> Higher-resolution processing</li>
+                        <li><span class="tick">✓</span> Detection sensitivity tuning</li>
+                        <li><span class="tick">✓</span> Multiple blur shape options</li>
+                        <li><span class="tick">✓</span> Batch frame processing</li>
+                        <li><span class="lock">✕</span> Advanced multi-face tracking</li>
+                    </ul>
+                    <button class="plan-cta upgrade-pro" id="cta-pro" onclick="upgradeTo('pro')">Upgrade to Pro →</button>
+                </div>
+
+                <!-- Advanced -->
+                <div class="plan-card" id="card-advanced">
+                    <span class="plan-tag advanced">Advanced</span>
+                    <div class="plan-name-title">Advanced</div>
+                    <div class="plan-price">
+                        <span class="amount">$4.99</span>
+                        <span class="per">/mo</span>
+                    </div>
+                    <ul class="plan-features">
+                        <li><span class="tick">✓</span> Everything in Pro</li>
+                        <li><span class="tick">✓</span> Multi-face identity tracking</li>
+                        <li><span class="tick">✓</span> Custom redaction shapes</li>
+                        <li><span class="tick">✓</span> Priority frame processing</li>
+                        <li><span class="tick">✓</span> Export with metadata</li>
+                        <li><span class="tick">✓</span> Early access to new features</li>
+                    </ul>
+                    <button class="plan-cta upgrade-adv" id="cta-advanced" onclick="upgradeTo('advanced')">Upgrade to Advanced →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FAQ -->
+        <div>
+            <div class="section-title">FAQ</div>
+            <div class="faq">
+                <div class="faq-item">
+                    <div class="faq-q">Can I cancel anytime?</div>
+                    <div class="faq-a">Yes. Click <strong>Manage Billing</strong> above to access the Stripe billing portal where you can cancel, upgrade, or downgrade your subscription at any time. Your access continues until the end of the billing period.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Is my payment data secure?</div>
+                    <div class="faq-a">All payments are processed by <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>. We never store your card details.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">What happens when I upgrade?</div>
+                    <div class="faq-a">Your plan upgrades immediately. You're billed a prorated amount for the remainder of the current billing cycle, then the new rate going forward.</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Does processing happen on your servers?</div>
+                    <div class="faq-a">No. All face detection and blurring runs locally in your browser using TensorFlow.js. Videos never leave your device.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>◈ Face Blur &nbsp;·&nbsp; <a href="/support">Support</a> &nbsp;·&nbsp; <a href="/tutorial">Tutorial</a></p>
+    </footer>
+
+    <script>
+        const _h = window.location.hostname;
+        const _dev = _h === 'localhost' || _h === '127.0.0.1' || _h.endsWith('.local');
+        const API      = _dev ? 'http://localhost:4000'  : 'https://server.faceblurr.com';
+        const FRONTEND = _dev ? 'http://localhost:5174'  : 'https://faceblurr.com';
+
+        const PLAN_RANK  = { free: 0, pro: 1, advanced: 2 };
+        const PLAN_LABEL = { free: 'Free — Starter', pro: 'Pro — $2.99/mo', advanced: 'Advanced — $4.99/mo' };
+        const PLAN_SUB   = {
+            free:     'Basic face blurring tools',
+            pro:      'Higher-resolution processing & tuning',
+            advanced: 'Multi-face tracking & priority processing'
+        };
+
+        let currentPlan = 'free';
+        let currentUserId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const auth = FaceBlurAuth.getAuth();
+            if (!auth) {
+                window.location.href = '/login?return=' + encodeURIComponent(location.href);
+                return;
+            }
+            currentUserId = auth.id;
+            currentPlan   = auth.accountType || 'free';
+            renderPlanState(currentPlan);
+            fetchStatus();
+        });
+
+        function renderPlanState(plan) {
+            const nameEl = document.getElementById('current-plan-name');
+            const subEl  = document.getElementById('current-plan-sub');
+            nameEl.textContent = plan.charAt(0).toUpperCase() + plan.slice(1);
+            nameEl.className   = 'plan-name ' + plan;
+            subEl.textContent  = PLAN_SUB[plan] || '';
+
+            /* Highlight active card */
+            ['free', 'pro', 'advanced'].forEach(p => {
+                const card = document.getElementById('card-' + p);
+                card.classList.remove('current', 'current-advanced');
+                if (p === plan) card.classList.add(plan === 'advanced' ? 'current-advanced' : 'current');
+            });
+
+            /* CTA states */
+            const ctaFree = document.getElementById('cta-free');
+            const ctaPro  = document.getElementById('cta-pro');
+            const ctaAdv  = document.getElementById('cta-advanced');
+            const rank    = PLAN_RANK[plan] || 0;
+
+            /* Free CTA */
+            if (rank === 0) {
+                ctaFree.textContent = '✓ Current Plan';
+                ctaFree.className   = 'plan-cta active-plan';
+                ctaFree.disabled    = true;
+            } else {
+                ctaFree.textContent = 'Downgrade to Free';
+                ctaFree.className   = 'plan-cta downgrade';
+                ctaFree.disabled    = false;
+                ctaFree.onclick     = openPortal;
+            }
+
+            /* Pro CTA */
+            if (rank === 1) {
+                ctaPro.textContent = '✓ Current Plan';
+                ctaPro.className   = 'plan-cta active-plan';
+                ctaPro.disabled    = true;
+            } else if (rank < 1) {
+                ctaPro.textContent = 'Upgrade to Pro →';
+                ctaPro.className   = 'plan-cta upgrade-pro';
+                ctaPro.disabled    = false;
+            } else {
+                ctaPro.textContent = 'Downgrade to Pro';
+                ctaPro.className   = 'plan-cta downgrade';
+                ctaPro.disabled    = false;
+                ctaPro.onclick     = openPortal;
+            }
+
+            /* Advanced CTA */
+            if (rank === 2) {
+                ctaAdv.textContent = '✓ Current Plan';
+                ctaAdv.className   = 'plan-cta active-plan';
+                ctaAdv.disabled    = true;
+            } else {
+                ctaAdv.textContent = 'Upgrade to Advanced →';
+                ctaAdv.className   = 'plan-cta upgrade-adv';
+                ctaAdv.disabled    = false;
+            }
+
+            /* Show Manage Billing for paid plans */
+            document.getElementById('manage-billing-btn').style.display =
+                rank > 0 ? 'inline-block' : 'none';
+        }
+
+        async function fetchStatus() {
+            try {
+                const token = localStorage.getItem('fb_token');
+                const res   = await fetch(`${API}/api/subscription/status`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                const plan = data.accountType || data.plan || currentPlan;
+                currentPlan = plan;
+                /* Refresh token to sync localStorage */
+                await FaceBlurAuth.refreshToken();
+                renderPlanState(plan);
+            } catch (_) { /* non-critical */ }
+        }
+
+        function upgradeTo(plan) {
+            window.location.href = `/checkout?plan=${plan}&return=${encodeURIComponent(location.href)}`;
+        }
+
+        async function openPortal() {
+            const btn = document.getElementById('manage-billing-btn');
+            btn.disabled    = true;
+            btn.textContent = 'Opening portal…';
+            try {
+                const token = localStorage.getItem('fb_token');
+                const res   = await fetch(`${API}/api/subscription/portal`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId:    currentUserId,
+                        returnUrl: `${FRONTEND}/plans`
+                    })
+                });
+                const data = await res.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    alert(data.message || 'Could not open billing portal. Please contact support.');
+                    btn.disabled    = false;
+                    btn.textContent = 'Manage Billing →';
+                }
+            } catch (_) {
+                alert('Network error. Please try again.');
+                btn.disabled    = false;
+                btn.textContent = 'Manage Billing →';
+            }
+        }
+    </script>
+</body>
+</html>

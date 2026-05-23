@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1;
+            max-width: 960px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* ── Welcome row ── */
+        .welcome-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .welcome-text h1 {
+            font-family: var(--display);
+            font-size: clamp(1.4rem, 4vw, 2rem);
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--text);
+        }
+        .welcome-text p {
+            font-size: 0.78rem;
+            color: var(--muted);
+            margin-top: 0.25rem;
+        }
+        .plan-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .plan-chip.free     { background: rgba(100,116,139,0.15); color: var(--muted);   border: 1px solid rgba(100,116,139,0.25); }
+        .plan-chip.pro      { background: rgba(124,108,252,0.15); color: var(--accent);  border: 1px solid rgba(124,108,252,0.35); }
+        .plan-chip.advanced { background: rgba(192,132,252,0.15); color: var(--accent2); border: 1px solid rgba(192,132,252,0.35); }
+
+        /* ── Stat cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem 1.4rem;
+        }
+        .stat-label {
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+        .stat-value {
+            font-family: var(--display);
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .stat-value.accent  { color: var(--accent); }
+        .stat-value.accent2 { color: var(--accent2); }
+        .stat-value.green   { color: var(--green); }
+
+        /* ── Section heading ── */
+        .section-title {
+            font-family: var(--display);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 0.9rem;
+        }
+
+        /* ── Tool cards ── */
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .tool-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.4rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+        .tool-card:hover {
+            border-color: rgba(124,108,252,0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px rgba(124,108,252,0.1);
+        }
+        .tool-icon { font-size: 1.6rem; }
+        .tool-name {
+            font-family: var(--display);
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .tool-desc {
+            font-size: 0.73rem;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .tool-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            font-size: 0.6rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            font-weight: 600;
+        }
+        .tool-badge.pro      { background: rgba(124,108,252,0.2); color: var(--accent); }
+        .tool-badge.advanced { background: rgba(192,132,252,0.2); color: var(--accent2); }
+        .tool-badge.free     { background: rgba(34,211,160,0.15); color: var(--green); }
+
+        /* ── Account section ── */
+        .account-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+        }
+        .account-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.65rem 0;
+            border-bottom: 1px solid var(--border);
+            gap: 1rem;
+        }
+        .account-row:last-child { border-bottom: none; }
+        .account-key {
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            min-width: 110px;
+        }
+        .account-val {
+            font-size: 0.8rem;
+            color: var(--text);
+            text-align: right;
+        }
+        .account-val a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        .account-val a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <!-- Welcome row -->
+        <div class="welcome-row">
+            <div class="welcome-text">
+                <h1>Welcome back, <span id="dash-username" style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">—</span></h1>
+                <p id="dash-email" style="color:var(--muted);font-size:0.78rem"></p>
+            </div>
+            <div id="dash-plan-chip" class="plan-chip free">Free Plan</div>
+        </div>
+
+        <!-- Stats -->
+        <div>
+            <div class="section-title">Account Overview</div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Current Plan</div>
+                    <div class="stat-value accent" id="stat-plan">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Member Since</div>
+                    <div class="stat-value" id="stat-joined">—</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Status</div>
+                    <div class="stat-value green">Active</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tools -->
+        <div>
+            <div class="section-title">Tools</div>
+            <div class="tools-grid">
+                <a href="/webcam" class="tool-card">
+                    <div class="tool-badge free">Free</div>
+                    <div class="tool-icon">📷</div>
+                    <div class="tool-name">Webcam Blur</div>
+                    <div class="tool-desc">Real-time face blurring via your webcam. Runs locally in-browser.</div>
+                </a>
+                <a href="/video" class="tool-card">
+                    <div class="tool-badge free">Free</div>
+                    <div class="tool-icon">🎬</div>
+                    <div class="tool-name">Video Blur</div>
+                    <div class="tool-desc">Upload a video file and blur all detected faces frame-by-frame.</div>
+                </a>
+                <a href="/video-pro" class="tool-card">
+                    <div class="tool-badge pro">Pro</div>
+                    <div class="tool-icon">⚡</div>
+                    <div class="tool-name">Pro Video</div>
+                    <div class="tool-desc">Higher-resolution processing, batch detection tuning, export options.</div>
+                </a>
+                <a href="/video-advanced" class="tool-card">
+                    <div class="tool-badge advanced">Advanced</div>
+                    <div class="tool-icon">✦</div>
+                    <div class="tool-name">Advanced Video</div>
+                    <div class="tool-desc">Multi-face tracking, custom redaction shapes, priority processing.</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Account details -->
+        <div>
+            <div class="section-title">Account Details</div>
+            <div class="account-card">
+                <div class="account-row">
+                    <span class="account-key">Username</span>
+                    <span class="account-val" id="acct-username">—</span>
+                </div>
+                <div class="account-row">
+                    <span class="account-key">Email</span>
+                    <span class="account-val" id="acct-email">—</span>
+                </div>
+                <div class="account-row">
+                    <span class="account-key">Plan</span>
+                    <span class="account-val" id="acct-plan">—</span>
+                </div>
+                <div class="account-row">
+                    <span class="account-key">Subscription</span>
+                    <span class="account-val"><a href="/plans">Manage →</a></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>◈ Face Blur &nbsp;·&nbsp; <a href="/support">Support</a> &nbsp;·&nbsp; <a href="/tutorial">Tutorial</a></p>
+    </footer>
+
+    <script>
+        const _h = window.location.hostname;
+        const API = (_h === 'localhost' || _h === '127.0.0.1' || _h.endsWith('.local'))
+            ? 'http://localhost:4000'
+            : 'https://server.faceblurr.com';
+
+        /* Require auth */
+        document.addEventListener('DOMContentLoaded', async () => {
+            const auth = FaceBlurAuth.getAuth();
+            if (!auth) {
+                window.location.href = '/login?return=' + encodeURIComponent(location.href);
+                return;
+            }
+
+            const username = auth.username || auth.email?.split('@')[0] || 'User';
+            const plan     = auth.accountType || 'free';
+            const planLabel = { free: 'Free', pro: 'Pro', advanced: 'Advanced' };
+
+            /* Welcome row */
+            document.getElementById('dash-username').textContent = username;
+            document.getElementById('dash-email').textContent    = auth.email || '';
+
+            const chip = document.getElementById('dash-plan-chip');
+            chip.textContent = (planLabel[plan] || plan) + ' Plan';
+            chip.className   = 'plan-chip ' + plan;
+
+            /* Stats */
+            document.getElementById('stat-plan').textContent = planLabel[plan] || plan;
+
+            /* Account rows */
+            document.getElementById('acct-username').textContent = username;
+            document.getElementById('acct-email').textContent    = auth.email || '—';
+            document.getElementById('acct-plan').textContent     = planLabel[plan] || plan;
+
+            /* Fetch extra details from API */
+            try {
+                const token = localStorage.getItem('fb_token');
+                const res   = await fetch(`${API}/api/auth/me`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const user = data.user || data;
+                    if (user.createdAt) {
+                        const d = new Date(user.createdAt);
+                        document.getElementById('stat-joined').textContent =
+                            d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }
+                }
+            } catch (_) { /* non-critical */ }
+
+            document.getElementById('stat-joined').textContent =
+                document.getElementById('stat-joined').textContent || '—';
+        });
+    </script>
+</body>
+</html>

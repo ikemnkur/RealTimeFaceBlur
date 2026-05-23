@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Support</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .main { flex: 1; max-width: 860px; width: 100%; margin: 0 auto; padding: 3rem 1.5rem; }
+        .support-hero {
+            background: linear-gradient(135deg, rgba(124,108,252,0.12), rgba(192,132,252,0.06));
+            border: 1px solid rgba(124,108,252,0.2);
+            border-radius: 18px;
+            padding: 2.5rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .support-hero h1 { font-family: var(--display); font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
+        .support-hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .support-hero p { color: var(--muted); font-size: 0.88rem; margin-top: 0.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.75rem; margin: 1.5rem 0 0; }
+        .stat-card {
+            background: rgba(124,108,252,0.1);
+            border: 1px solid rgba(124,108,252,0.25);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .stat-number { font-family: var(--display); font-size: 1.4rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+        .stat-label { font-size: 0.68rem; color: var(--muted); margin-top: 0.15rem; letter-spacing: 0.04em; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.85rem; margin: 1.25rem 0; }
+        .feature-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem; }
+        .feature-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+        .feature-item h4 { font-size: 0.84rem; font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+        .feature-item p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; margin: 0; }
+        .tech-stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+        .tech-badge { font-size: 0.72rem; font-family: var(--mono); letter-spacing: 0.03em; color: var(--accent); background: rgba(124,108,252,0.1); border: 1px solid rgba(124,108,252,0.25); padding: 0.3rem 0.75rem; border-radius: 999px; }
+        .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0.85rem; margin: 1.25rem 0; }
+        .contact-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem; }
+        .contact-card h3 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text); }
+        .contact-card p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; margin: 0 0 0.4rem; }
+        .contact-card a, .contact-card .email { font-size: 0.75rem; color: var(--accent); text-decoration: none; }
+        .contact-card a:hover { text-decoration: underline; }
+    </style>
+    <script src="js/guard.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support" class="active">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="support-hero">
+            <h1>Help &amp; <span>Support</span></h1>
+            <p>Everything you need to know about Face Blur</p>
+            <div class="stats-grid">
+                <div class="stat-card"><div class="stat-number">100%</div><div class="stat-label">Client-Side</div></div>
+                <div class="stat-card"><div class="stat-number">0</div><div class="stat-label">Data Uploaded</div></div>
+                <div class="stat-card"><div class="stat-number">Real-Time</div><div class="stat-label">Processing</div></div>
+                <div class="stat-card"><div class="stat-number">AI-Powered</div><div class="stat-label">Detection</div></div>
+            </div>
+        </div>
+
+        <div class="prose-section">
+            <h2>📖 About Face Blur</h2>
+            <p>Face Blur is a privacy-focused web application that uses AI to automatically detect and blur faces in real-time video streams and uploaded videos. It runs entirely in your browser for maximum privacy.</p>
+            <p>Whether you're a journalist protecting sources, a content creator respecting audience privacy, or an individual protecting your identity online — Face Blur provides a fast, reliable, and secure solution.</p>
+        </div>
+
+        <div class="prose-section">
+            <h2>✨ Key Features</h2>
+            <div class="feature-grid">
+                <div class="feature-item"><div class="feature-icon">🤖</div><h4>AI Detection</h4><p>BlazeFace model for accurate, fast face detection</p></div>
+                <div class="feature-item"><div class="feature-icon">⚡</div><h4>Real-Time</h4><p>Process live webcam feeds with minimal latency</p></div>
+                <div class="feature-item"><div class="feature-icon">🔒</div><h4>Privacy First</h4><p>All processing happens locally — no uploads</p></div>
+                <div class="feature-item"><div class="feature-icon">🎨</div><h4>Customizable</h4><p>Adjust blur intensity, resolution, detection rate</p></div>
+                <div class="feature-item"><div class="feature-icon">💾</div><h4>Recording</h4><p>Capture and download processed video output</p></div>
+                <div class="feature-item"><div class="feature-icon">🌐</div><h4>Web-Based</h4><p>No installation required, any modern browser</p></div>
+            </div>
+        </div>
+
+        <div class="prose-section">
+            <h2>🛠️ Technology Stack</h2>
+            <p>Face Blur is built using modern web technologies:</p>
+            <div class="tech-stack">
+                <span class="tech-badge">TensorFlow.js</span>
+                <span class="tech-badge">BlazeFace Model</span>
+                <span class="tech-badge">HTML5 Canvas</span>
+                <span class="tech-badge">WebRTC</span>
+                <span class="tech-badge">MediaRecorder API</span>
+                <span class="tech-badge">JavaScript ES6+</span>
+            </div>
+            <div class="callout info"><strong>ℹ️ Open Source:</strong> BlazeFace is developed by Google and released under the Apache 2.0 license.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>🔐 Privacy &amp; Security</h2>
+            <ul>
+                <li><strong>No Server Upload:</strong> All video processing happens locally. Your video never leaves your device.</li>
+                <li><strong>No Data Collection:</strong> We don't collect, store, or analyse your video data or personal information.</li>
+                <li><strong>No Tracking:</strong> No analytics, cookies, or tracking scripts.</li>
+                <li><strong>Camera Access:</strong> Only requested for webcam mode. Revoke any time in browser settings.</li>
+            </ul>
+            <div class="callout warning"><strong>⚠️ Important:</strong> No automated system is perfect. Always review output before sharing sensitive content.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>💬 Get Support</h2>
+            <div class="contact-grid">
+                <div class="contact-card"><h3>📚 Tutorial</h3><p>Step-by-step guides and best practices</p><a href="/tutorial">View Tutorial →</a></div>
+                <div class="contact-card"><h3>🐛 Report a Bug</h3><p>Found an issue? Let us know!</p><span class="email">support@faceblur.app</span></div>
+                <div class="contact-card"><h3>💡 Feature Request</h3><p>Suggest new features or improvements</p><span class="email">feedback@faceblur.app</span></div>
+                <div class="contact-card"><h3>📧 General Inquiry</h3><p>Questions or comments?</p><span class="email">hello@faceblur.app</span></div>
+            </div>
+            <div class="callout info"><strong>ℹ️ Response Time:</strong> We typically respond within 24–48 hours on business days.</div>
+        </div>
+
+        <div class="prose-section">
+            <h2>❓ Frequently Asked Questions</h2>
+            <h3>Is my video data sent to a server?</h3>
+            <p>No. All processing runs locally via TensorFlow.js. Your video never leaves your device.</p>
+            <h3>Which browsers are supported?</h3>
+            <p>Modern Chrome, Firefox, Edge, and Safari. Chrome generally offers the best performance.</p>
+            <h3>Can I process videos longer than 2 minutes?</h3>
+            <p>The recording limit is 120 seconds to prevent browser memory issues. Record in segments for longer videos.</p>
+            <h3>How accurate is the face detection?</h3>
+            <p>BlazeFace is highly accurate for frontal faces with good lighting. Side profiles or obscured faces may not always be detected.</p>
+            <h3>Can I use this commercially?</h3>
+            <p>Contact <span class="email">licensing@faceblur.app</span> for commercial licensing inquiries.</p>
+        </div>
+
+        <div class="prose-section">
+            <h2>🙏 Credits</h2>
+            <ul>
+                <li><strong>TensorFlow.js Team</strong> — For the machine learning framework</li>
+                <li><strong>Google Research</strong> — For the BlazeFace face detection model</li>
+                <li><strong>Open Source Community</strong> — For continuous support and contributions</li>
+            </ul>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/tutorial">Tutorial</a> · <a href="/login">Sign In</a>
+    </footer>
+</body>
+</html>

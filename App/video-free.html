@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Face Blur — Video</title>
+    <title>Face Blur — Free Video Blur</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+    <link rel="stylesheet" href="style.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
@@ -415,7 +416,6 @@
         /* ── MODE SELECTOR ── */
         .setting-row select#modeSelect option[value="auto"]   { color: var(--accent); }
         .setting-row select#modeSelect option[value="manual"] { color: var(--green); }
-        .setting-row select#modeSelect option[value="hybrid"] { color: var(--accent2); }
 
         /* ── COUNTDOWN OVERLAY ── */
         .countdown-overlay {
@@ -560,18 +560,22 @@
             }
         }
     </style>
+    <script src="js/guard.js"></script>
 </head>
 
 <body>
 
     <nav>
-        <div class="logo">◈ Face Blur</div>
+        <a href="/" class="logo">◈ Face Blur</a>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="webcam.html">Webcam</a></li>
-            <li><a href="video.html" class="active">Video</a></li>
-            <li><a href="tutorial.html">Tutorial</a></li>
-            <li><a href="support.html">Support</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video" class="active">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
         </ul>
     </nav>
 
@@ -579,6 +583,19 @@
         <!-- <h1 class="page-title">Video <span>Face Blur</span></h1> -->
 
         <div id="status">Loading AI model…</div>
+
+    <!-- Upgrade modal -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="modal-box" style="text-align:center">
+            <div style="font-size:2rem;margin-bottom:0.6rem">🔒</div>
+            <h2 style="font-family:var(--display);font-size:1.05rem;font-weight:700;margin-bottom:0.6rem">Pro Feature</h2>
+            <p id="upgradeMsg" style="font-size:0.78rem;color:var(--muted);line-height:1.6;margin-bottom:1.25rem"></p>
+            <div style="display:flex;gap:0.6rem;justify-content:center;flex-wrap:wrap">
+                <button id="upgradeOkBtn">OK, got it</button>
+                <a href="/video-pro" style="text-decoration:none"><button class="btn-primary">✦ Upgrade to Pro</button></a>
+            </div>
+        </div>
+    </div>
 
     <!-- Upload modal -->
     <div class="modal-overlay" id="uploadModal">
@@ -611,7 +628,6 @@
                         <select id="modeSelect">
                             <option value="auto" selected>Auto — AI blur</option>
                             <option value="manual">Manual — Click blur</option>
-                            <option value="hybrid">Hybrid — Both</option>
                         </select>
                     </div>
 
@@ -745,7 +761,7 @@
     </div>
 
     <footer>
-        &copy; 2026 Face Blur App · <a href="support.html">Support</a>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a>
     </footer>
 
     <script>
@@ -797,8 +813,25 @@
         const modalCloseBtn = document.getElementById('modalCloseBtn');
         const modeSelect       = document.getElementById('modeSelect');
         const countdownOverlay = document.getElementById('countdownOverlay');
+        const upgradeModal  = document.getElementById('upgradeModal');
+        const upgradeMsg    = document.getElementById('upgradeMsg');
+        const upgradeOkBtn  = document.getElementById('upgradeOkBtn');
 
-        // ── Modal open / close ──
+        // ── Upgrade alert ──
+        let _upgradeOkCb = null;
+        function showUpgradeAlert(msg, onOk) {
+            upgradeMsg.textContent = msg;
+            _upgradeOkCb = onOk;
+            upgradeModal.classList.add('open');
+        }
+        function closeUpgradeModal() {
+            upgradeModal.classList.remove('open');
+            if (_upgradeOkCb) { _upgradeOkCb(); _upgradeOkCb = null; }
+        }
+        upgradeOkBtn.addEventListener('click', closeUpgradeModal);
+        upgradeModal.addEventListener('click', e => { if (e.target === upgradeModal) closeUpgradeModal(); });
+
+        // ── Upload modal open / close ──
         function openModal()  { uploadModal.classList.add('open'); }
         function closeModal() { uploadModal.classList.remove('open'); }
         openUploadBtn.addEventListener('click', openModal);
@@ -816,7 +849,7 @@
         let cachedFaces = [];
         let lastDetectMs = 0;
         let detectPending = false;
-        let blurMode = 'auto';   // 'auto' | 'manual' | 'hybrid'
+        let blurMode = 'auto';   // 'auto' | 'manual'
 
         // ─────────────────────────────────────────────
         //  User settings (live)
@@ -852,18 +885,41 @@
         });
 
         resSel.addEventListener('change', e => {
+            if (e.target.value === '1') {
+                showUpgradeAlert(
+                    'Output at 100% (original) resolution is a Pro feature. The free limit is 75%.',
+                    () => { resSel.value = '0.75'; resScale = 0.75; if (video.videoWidth) resizeCanvas(); }
+                );
+                return;
+            }
             resScale = +e.target.value;
             if (video.videoWidth) resizeCanvas();
         });
 
         detectRateIn.addEventListener('input', e => {
-            detectInterval = +e.target.value;
-            rateVal.textContent = detectInterval + 'ms';
+            const v = +e.target.value;
+            if (v < 150) {
+                showUpgradeAlert(
+                    'Detection Interval below 150 ms is a Pro feature. The free limit is 150 ms.',
+                    () => { detectRateIn.value = 150; detectInterval = 150; rateVal.textContent = '150ms'; }
+                );
+                return;
+            }
+            detectInterval = v;
+            rateVal.textContent = v + 'ms';
         });
 
         sensitivityIn.addEventListener('input', e => {
-            sensitivity = +e.target.value;
-            sensitivityVal.textContent = sensitivity.toFixed(2);
+            const v = +e.target.value;
+            if (v < 0.50) {
+                showUpgradeAlert(
+                    'Sensitivity below 0.50 is a Pro feature. The free limit is 0.50.',
+                    () => { sensitivityIn.value = 0.50; sensitivity = 0.50; sensitivityVal.textContent = '0.50'; }
+                );
+                return;
+            }
+            sensitivity = v;
+            sensitivityVal.textContent = v.toFixed(2);
         });
 
         maskTypeSelect.addEventListener('change', e => {
@@ -876,13 +932,29 @@
         });
 
         falloffIn.addEventListener('input', e => {
-            falloffTime = +e.target.value;
-            falloffValEl.textContent = falloffTime.toFixed(1) + 's';
+            const v = +e.target.value;
+            if (v > 1.5) {
+                showUpgradeAlert(
+                    'Mask Falloff above 1.5 s is a Pro feature. The free limit is 1.5 s.',
+                    () => { falloffIn.value = 1.5; falloffTime = 1.5; falloffValEl.textContent = '1.5s'; }
+                );
+                return;
+            }
+            falloffTime = v;
+            falloffValEl.textContent = v.toFixed(1) + 's';
         });
 
         maxFacesIn.addEventListener('input', e => {
-            maxFaces = +e.target.value;
-            maxFacesVal.textContent = maxFaces;
+            const v = +e.target.value;
+            if (v > 1) {
+                showUpgradeAlert(
+                    'Blurring more than 1 face at a time is a Pro feature. The free limit is 1 face.',
+                    () => { maxFacesIn.value = 1; maxFaces = 1; maxFacesVal.textContent = '1'; }
+                );
+                return;
+            }
+            maxFaces = v;
+            maxFacesVal.textContent = v;
         });
 
         clickBlurBtn.addEventListener('click', () => {
@@ -909,16 +981,40 @@
         });
 
         cbSizeIn.addEventListener('input', e => {
-            cbSize = +e.target.value;
-            cbSizeVal.textContent = cbSize + 'px';
+            const v = +e.target.value;
+            if (v > 100) {
+                showUpgradeAlert(
+                    'Click Blur size above 100 px is a Pro feature. The free limit is 100 px.',
+                    () => { cbSizeIn.value = 100; cbSize = 100; cbSizeVal.textContent = '100px'; }
+                );
+                return;
+            }
+            cbSize = v;
+            cbSizeVal.textContent = v + 'px';
         });
         cbFadeIn.addEventListener('input', e => {
-            cbFadeTime = +e.target.value;
-            cbFadeVal.textContent = cbFadeTime.toFixed(1) + 's';
+            const v = +e.target.value;
+            if (v > 0.6) {
+                showUpgradeAlert(
+                    'Click Blur fade time above 0.6 s is a Pro feature. The free limit is 0.6 s.',
+                    () => { cbFadeIn.value = 0.6; cbFadeTime = 0.6; cbFadeVal.textContent = '0.6s'; }
+                );
+                return;
+            }
+            cbFadeTime = v;
+            cbFadeVal.textContent = v.toFixed(1) + 's';
         });
         cbAlphaIn.addEventListener('input', e => {
-            cbAlpha = +e.target.value;
-            cbAlphaVal.textContent = cbAlpha.toFixed(2);
+            const v = +e.target.value;
+            if (v > 0.8) {
+                showUpgradeAlert(
+                    'Click Blur opacity above 0.80 is a Pro feature. The free limit is 0.80.',
+                    () => { cbAlphaIn.value = 0.8; cbAlpha = 0.8; cbAlphaVal.textContent = '0.80'; }
+                );
+                return;
+            }
+            cbAlpha = v;
+            cbAlphaVal.textContent = v.toFixed(2);
         });
         cbOffsetXIn.addEventListener('input', e => {
             cbOffsetX = +e.target.value;
@@ -952,12 +1048,6 @@
                     isRunning = true;
                     rafId = requestAnimationFrame(renderFrame);
                 }
-            } else { // hybrid
-                // Both AI and click blur
-                mouseBlurEnabled = true;
-                clickBlurBtn.classList.add('btn-active');
-                clickBlurBtn.textContent = '✦ On';
-                canvasWrap.classList.add('click-blur-mode');
             }
         }
 
@@ -1431,6 +1521,7 @@
         // ─────────────────────────────────────────────
         //  Memory meter
         // ─────────────────────────────────────────────
+        let _memAlertShown = false;
         function updateMemMeter() {
             const info = tf.memory();
             const tensors = info.numTensors;
@@ -1441,6 +1532,14 @@
                 ? 'linear-gradient(90deg,#f87171,#fbbf24)'
                 : 'linear-gradient(90deg,#22d3a0,#7c6cfc)';
             memLabel.textContent = tensors + ' tensors';
+            if (tensors > 75 && !_memAlertShown) {
+                _memAlertShown = true;
+                showUpgradeAlert(
+                    'Your session is using more than 75 TF tensors. Upgrade to Pro for optimised memory management and higher performance.'
+                    , () => {}
+                );
+            }
+            if (tensors <= 75) _memAlertShown = false;
         }
 
         // ─────────────────────────────────────────────

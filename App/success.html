@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Payment Successful</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 3rem 1.5rem; text-align: center;
+        }
+
+        .success-card {
+            background: var(--surface);
+            border: 1px solid rgba(34,211,160,0.3);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            max-width: 480px; width: 100%;
+            box-shadow: 0 0 0 1px rgba(34,211,160,0.1), 0 32px 80px rgba(0,0,0,0.5);
+            animation: slide-up 0.35s ease;
+        }
+
+        @keyframes slide-up {
+            from { opacity:0; transform: translateY(24px); }
+            to   { opacity:1; transform: none; }
+        }
+
+        .success-icon {
+            width: 72px; height: 72px;
+            background: rgba(34,211,160,0.12);
+            border: 2px solid rgba(34,211,160,0.4);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin: 0 auto 1.5rem;
+        }
+
+        .success-card h1 {
+            font-family: var(--display); font-size: 1.6rem; font-weight: 800;
+            letter-spacing: -0.03em; color: var(--text); margin-bottom: 0.5rem;
+        }
+
+        .success-card .plan-name {
+            font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--green); background: rgba(34,211,160,0.1);
+            border: 1px solid rgba(34,211,160,0.25);
+            display: inline-block; padding: 0.25rem 0.85rem; border-radius: 999px;
+            margin-bottom: 1rem;
+        }
+
+        .success-card p { font-size: 0.82rem; color: var(--muted); line-height: 1.75; margin-bottom: 1.5rem; }
+
+        .success-card .cta-group { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+        .cta-green {
+            display: inline-block;
+            font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none;
+            background: var(--green); color: #0d0d12; border: 1px solid var(--green);
+            transition: background 0.2s;
+        }
+        .cta-green:hover { background: #1cb890; }
+
+        .cta-outline {
+            display: inline-block;
+            font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none;
+            background: transparent; color: var(--text); border: 1px solid var(--border);
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .cta-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* Loading state */
+        .loading-ring {
+            width: 44px; height: 44px;
+            border: 3px solid rgba(124,108,252,0.2);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .progress-bar-wrap {
+            width: 100%; background: var(--surface2); border-radius: 999px;
+            height: 4px; margin-top: 1.25rem; overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%; background: var(--green); border-radius: 999px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <!-- Loading state -->
+        <div id="loading-state">
+            <div class="loading-ring"></div>
+            <p style="color:var(--muted);font-size:0.82rem" id="loading-text">Activating your subscription…</p>
+        </div>
+
+        <!-- Success state (hidden until ready) -->
+        <div id="success-state" style="display:none">
+            <div class="success-card">
+                <div class="success-icon">✓</div>
+                <h1>You're all set!</h1>
+                <div class="plan-name" id="plan-badge">Pro Plan</div>
+                <p id="success-desc">
+                    Your subscription is now active. You now have access to all
+                    <strong id="plan-label-inline">Pro</strong> features.
+                </p>
+                <div class="cta-group">
+                    <a id="cta-app" href="/video-pro" class="cta-green">▶ Open App</a>
+                    <a href="/" class="cta-outline">← Home</a>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-bar" id="redirect-bar" style="width:0%"></div>
+                </div>
+                <p style="font-size:0.68rem;color:var(--muted);margin-top:0.6rem;margin-bottom:0" id="redirect-msg">
+                    Redirecting in <span id="countdown">5</span>s…
+                </p>
+            </div>
+        </div>
+
+        <!-- Error state -->
+        <div id="error-state" style="display:none">
+            <div class="success-card" style="border-color:rgba(248,113,113,0.3)">
+                <div class="success-icon" style="background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.4)">⚠️</div>
+                <h1 style="font-size:1.3rem">Something went wrong</h1>
+                <p id="error-desc">We couldn't activate your subscription automatically. But don't worry — if payment was taken, your plan will activate within a few minutes via our webhook.</p>
+                <div class="cta-group">
+                    <a href="/" class="cta-green" style="background:var(--accent);border-color:var(--accent);color:#fff">Go to App</a>
+                    <a href="/support" class="cta-outline">Contact Support</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a>
+    </footer>
+
+    <script>
+    (async function () {
+        const PLAN_META = {
+            free:     { label: 'Free',     dest: 'video.html' },
+            pro:      { label: 'Pro',      dest: 'video-pro.html' },
+            advanced: { label: 'Advanced', dest: 'video-advanced.html' },
+        };
+
+        const params   = new URLSearchParams(location.search);
+        const planId   = params.get('plan') || 'pro';
+        const returnTo = params.get('return') || null;
+        const meta     = PLAN_META[planId] || PLAN_META.pro;
+        const dest     = returnTo || meta.dest;
+
+        function setLoading(msg) {
+            document.getElementById('loading-text').textContent = msg;
+        }
+
+        function showError(msg) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display  = 'block';
+            if (msg) document.getElementById('error-desc').textContent = msg;
+        }
+
+        function showSuccess(newAccountType) {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('success-state').style.display = 'block';
+
+            const label = PLAN_META[newAccountType]?.label || meta.label;
+            document.getElementById('plan-badge').textContent        = label + ' Plan';
+            document.getElementById('plan-label-inline').textContent = label;
+            document.getElementById('cta-app').href                  = dest;
+
+            /* Countdown redirect */
+            let count = 5;
+            const bar = document.getElementById('redirect-bar');
+            const cd  = document.getElementById('countdown');
+
+            const t = setInterval(() => {
+                count--;
+                cd.textContent  = count;
+                bar.style.width = ((5 - count) / 5 * 100) + '%';
+                if (count <= 0) { clearInterval(t); location.href = dest; }
+            }, 1000);
+        }
+
+        /* ── Step 1: refresh JWT to get updated accountType ── */
+        setLoading('Refreshing your account…');
+
+        let refreshed = false;
+        const refreshData = await window.FaceBlurAuth.refreshToken();
+
+        if (refreshData && refreshData.success) {
+            refreshed = true;
+            setLoading('Subscription activated! Preparing your workspace…');
+            await new Promise(r => setTimeout(r, 600)); // brief pause for UX
+            showSuccess(refreshData.accountType);
+        } else {
+            /*
+             * Token refresh failed. This can happen if:
+             * 1. Stripe webhook hasn't fired yet (race condition)
+             * 2. User is not logged in
+             * We retry up to 3 times with 2s delay (webhook usually fires fast).
+             */
+            setLoading('Waiting for payment confirmation…');
+
+            let attempts = 0;
+            const maxAttempts = 4;
+
+            while (attempts < maxAttempts) {
+                await new Promise(r => setTimeout(r, 2000));
+                attempts++;
+                setLoading(`Checking subscription status (${attempts}/${maxAttempts})…`);
+
+                const retry = await window.FaceBlurAuth.refreshToken();
+                if (retry && retry.success) {
+                    const newPlan = retry.accountType || planId;
+                    const PLAN_RANK = { free: 0, pro: 1, advanced: 2 };
+                    if (PLAN_RANK[newPlan] >= PLAN_RANK[planId]) {
+                        showSuccess(newPlan);
+                        return;
+                    }
+                }
+            }
+
+            /* After retries, show a soft success (webhook may arrive later) */
+            showSuccess(planId);
+        }
+
+    })();
+    </script>
+</body>
+</html>

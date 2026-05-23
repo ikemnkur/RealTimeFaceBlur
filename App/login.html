@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Face Blur — Sign In</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem 4rem;
+        }
+
+        .auth-card {
+            width: min(420px, 100%);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 2.25rem 2rem;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo {
+            font-family: var(--display);
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        .auth-header p {
+            font-size: 0.78rem;
+            color: var(--muted);
+        }
+
+        /* Tab switcher */
+        .auth-tabs {
+            display: flex;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.25rem;
+            margin-bottom: 1.75rem;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 0.5rem;
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .auth-tab.active {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        /* Form panels */
+        .auth-panel { display: none; flex-direction: column; gap: 1rem; }
+        .auth-panel.active { display: flex; }
+
+        /* Alert message */
+        .auth-alert {
+            font-size: 0.75rem;
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .auth-alert.show { display: block; }
+        .auth-alert.error   { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--red); }
+        .auth-alert.success { background: rgba(34,211,160,0.1);  border: 1px solid rgba(34,211,160,0.3);  color: var(--green); }
+
+        /* Submit button full-width */
+        .btn-submit {
+            width: 100%;
+            padding: 0.7rem;
+            font-size: 0.82rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            font-family: var(--mono);
+            border: none;
+            border-radius: 8px;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            margin-top: 0.25rem;
+        }
+
+        .btn-submit:hover { background: var(--accent2); }
+        .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Password toggle */
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap .form-input {
+            padding-right: 2.5rem;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            right: 0.65rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.8rem;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .pw-toggle:hover { color: var(--text); }
+
+        /* Strength meter */
+        .strength-bar {
+            height: 3px;
+            border-radius: 99px;
+            background: var(--surface2);
+            overflow: hidden;
+            margin-top: 0.4rem;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 99px;
+            transition: width 0.3s, background 0.3s;
+            width: 0%;
+        }
+
+        .strength-label {
+            font-size: 0.65rem;
+            color: var(--muted);
+            text-align: right;
+            margin-top: 0.2rem;
+        }
+
+        /* Footer link */
+        .auth-footer-note {
+            text-align: center;
+            font-size: 0.72rem;
+            color: var(--muted);
+            margin-top: 1.5rem;
+        }
+
+        .auth-footer-note a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .auth-footer-note a:hover { text-decoration: underline; }
+
+        /* Or divider */
+        .or-divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--muted);
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            margin: 0.25rem 0;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .plan-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 0.6rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .plan-card {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .plan-card.selected {
+            border-color: var(--accent);
+            background: rgba(124, 108, 252, 0.1);
+        }
+
+        .plan-card .plan-icon { font-size: 1.2rem; margin-bottom: 0.25rem; }
+        .plan-card .plan-name { font-size: 0.68rem; color: var(--text); font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; }
+        .plan-card .plan-price { font-size: 0.62rem; color: var(--muted); margin-top: 0.15rem; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+        </ul>
+    </nav>
+
+    <div class="auth-wrap">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">◈ Face Blur</div>
+                <p>Privacy-first AI face blurring</p>
+            </div>
+
+            <!-- Tab switcher -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+                <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+            </div>
+
+            <!-- Alert -->
+            <div class="auth-alert" id="authAlert"></div>
+
+            <!-- ── Login panel ── -->
+            <div class="auth-panel active" id="panelLogin">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrap">
+                        <input class="form-input" type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+                        <button class="pw-toggle" onclick="togglePw('loginPassword', this)" type="button" tabindex="-1">👁</button>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:flex-end;margin-top:-0.25rem">
+                    <a href="#" style="font-size:0.72rem;color:var(--accent);text-decoration:none" onclick="showForgot()">Forgot password?</a>
+                </div>
+
+                <button class="btn-submit" id="loginBtn" onclick="handleLogin()">Sign In</button>
+
+                <div class="or-divider">or</div>
+
+                <div style="text-align:center;font-size:0.72rem;color:var(--muted)">
+                    Don't have an account?
+                    <a href="#" style="color:var(--accent);text-decoration:none" onclick="switchTab('register')">Create one →</a>
+                </div>
+            </div>
+
+            <!-- ── Register panel ── -->
+            <div class="auth-panel" id="panelRegister">
+                <!-- Plan picker -->
+                <div class="form-group">
+                    <label>Choose your plan</label>
+                    <div class="plan-cards">
+                        <div class="plan-card selected" id="plan-free" onclick="selectPlan('free')">
+                            <div class="plan-icon">✦</div>
+                            <div class="plan-name">Free</div>
+                            <div class="plan-price">$0 / mo</div>
+                        </div>
+                        <div class="plan-card" id="plan-pro" onclick="selectPlan('pro')">
+                            <div class="plan-icon">⚡</div>
+                            <div class="plan-name">Pro</div>
+                            <div class="plan-price">$2.99 / mo</div>
+                        </div>
+                        <div class="plan-card" id="plan-advanced" onclick="selectPlan('advanced')">
+                            <div class="plan-icon">◈</div>
+                            <div class="plan-name">Advanced</div>
+                            <div class="plan-price">$4.99 / mo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+                    <div class="form-group">
+                        <label>First name</label>
+                        <input class="form-input" type="text" id="regFirstName" placeholder="Jane" autocomplete="given-name">
+                    </div>
+                    <div class="form-group">
+                        <label>Last name</label>
+                        <input class="form-input" type="text" id="regLastName" placeholder="Smith" autocomplete="family-name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-input" type="email" id="regEmail" placeholder="you@example.com" autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label>Username</label>
+                    <input class="form-input" type="text" id="regUsername" placeholder="janesmith" autocomplete="username" maxlength="50">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrap">
+                        <input class="form-input" type="password" id="regPassword" placeholder="Min. 8 characters" autocomplete="new-password" oninput="checkStrength(this.value)">
+                        <button class="pw-toggle" onclick="togglePw('regPassword', this)" type="button" tabindex="-1">👁</button>
+                    </div>
+                    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                    <div class="strength-label" id="strengthLabel"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm password</label>
+                    <div class="input-wrap">
+                        <input class="form-input" type="password" id="regPasswordConfirm" placeholder="Re-enter password" autocomplete="new-password">
+                        <button class="pw-toggle" onclick="togglePw('regPasswordConfirm', this)" type="button" tabindex="-1">👁</button>
+                    </div>
+                </div>
+
+                <button class="btn-submit" id="registerBtn" onclick="handleRegister()">Create Account</button>
+
+                <div style="text-align:center;font-size:0.72rem;color:var(--muted)">
+                    Already have an account?
+                    <a href="#" style="color:var(--accent);text-decoration:none" onclick="switchTab('login')">Sign in →</a>
+                </div>
+            </div>
+
+            <!-- ── Forgot password panel ── -->
+            <div class="auth-panel" id="panelForgot">
+                <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.25rem;line-height:1.7">
+                    Enter your email and we'll send you a link to reset your password.
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input class="form-input" type="email" id="forgotEmail" placeholder="you@example.com">
+                </div>
+                <button class="btn-submit" onclick="handleForgot()">Send Reset Link</button>
+                <div style="text-align:center;font-size:0.72rem;color:var(--muted)">
+                    <a href="#" style="color:var(--accent);text-decoration:none" onclick="switchTab('login')">← Back to sign in</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a> · <a href="/tutorial">Tutorial</a>
+    </footer>
+
+    <script>
+        const _h = window.location.hostname;
+        const API = (_h === 'localhost' || _h === '127.0.0.1' || _h.endsWith('.local'))
+            ? 'http://localhost:4000'
+            : 'https://server.faceblurr.com';
+        let selectedPlan = 'free';
+
+        // ── Tab switching ──────────────────────────────
+        const TAB_PATH = { login: '/login', register: '/register', forgot: '/forgot-password' };
+        function switchTab(tab) {
+            ['login', 'register', 'forgot'].forEach(t => {
+                document.getElementById('panel' + capitalize(t)).classList.remove('active');
+            });
+            document.getElementById('tabLogin').classList.remove('active');
+            document.getElementById('tabRegister').classList.remove('active');
+            document.getElementById('panel' + capitalize(tab)).classList.add('active');
+            if (tab === 'login')    document.getElementById('tabLogin').classList.add('active');
+            if (tab === 'register') document.getElementById('tabRegister').classList.add('active');
+            // Update URL cleanly without reload; preserve ?return= query param
+            const qs = location.search;
+            if (TAB_PATH[tab]) history.replaceState(null, '', TAB_PATH[tab] + qs);
+            hideAlert();
+        }
+
+        function showForgot() { switchTab('forgot'); }
+
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+        // ── Alert helpers ──────────────────────────────
+        function showAlert(msg, type = 'error') {
+            const el = document.getElementById('authAlert');
+            el.textContent = msg;
+            el.className = 'auth-alert show ' + type;
+        }
+
+        function hideAlert() {
+            document.getElementById('authAlert').className = 'auth-alert';
+        }
+
+        // ── Plan selector ──────────────────────────────
+        function selectPlan(plan) {
+            selectedPlan = plan;
+            ['free', 'pro', 'advanced'].forEach(p => {
+                document.getElementById('plan-' + p).classList.toggle('selected', p === plan);
+            });
+        }
+
+        // ── Password visibility toggle ─────────────────
+        function togglePw(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.textContent = isText ? '👁' : '🙈';
+        }
+
+        // ── Password strength meter ────────────────────
+        function checkStrength(pw) {
+            const fill  = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthLabel');
+            let score = 0;
+            if (pw.length >= 8)  score++;
+            if (pw.length >= 12) score++;
+            if (/[A-Z]/.test(pw)) score++;
+            if (/[0-9]/.test(pw)) score++;
+            if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+            const levels = [
+                { pct: '0%',   color: 'transparent',    text: '' },
+                { pct: '25%',  color: 'var(--red)',      text: 'Weak' },
+                { pct: '50%',  color: 'var(--yellow)',   text: 'Fair' },
+                { pct: '75%',  color: 'var(--accent2)',  text: 'Good' },
+                { pct: '88%',  color: 'var(--green)',    text: 'Strong' },
+                { pct: '100%', color: 'var(--green)',    text: 'Very strong' },
+            ];
+
+            const lvl = levels[Math.min(score, 5)];
+            fill.style.width      = lvl.pct;
+            fill.style.background = lvl.color;
+            label.textContent     = lvl.text;
+        }
+
+        // ── Validation helpers ─────────────────────────
+        function validateEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        // ── Login ──────────────────────────────────────
+        async function handleLogin() {
+            hideAlert();
+            const email    = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) { showAlert('Please fill in all fields.'); return; }
+            if (!validateEmail(email)) { showAlert('Please enter a valid email.'); return; }
+
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.textContent = 'Signing in…';
+
+            try {
+                const res = await fetch(API + '/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.token) {
+                    localStorage.setItem('fb_token', data.token);
+                    localStorage.setItem('fb_user', JSON.stringify(data.user || {}));
+                    showAlert('Welcome back! Redirecting…', 'success');
+                    const returnTo = new URLSearchParams(location.search).get('return');
+                    setTimeout(() => { window.location.href = returnTo || '/'; }, 900);
+                } else if (data.requiresTOTP) {
+                    showAlert('2FA required — feature coming soon.', 'error');
+                } else {
+                    showAlert(data.message || 'Invalid email or password.');
+                }
+            } catch (err) {
+                showAlert('Cannot reach server. Make sure the backend is running.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+
+        // ── Register ───────────────────────────────────
+        async function handleRegister() {
+            hideAlert();
+
+            const firstName = document.getElementById('regFirstName').value.trim();
+            const lastName  = document.getElementById('regLastName').value.trim();
+            const email     = document.getElementById('regEmail').value.trim();
+            const username  = document.getElementById('regUsername').value.trim();
+            const password  = document.getElementById('regPassword').value;
+            const confirm   = document.getElementById('regPasswordConfirm').value;
+
+            if (!firstName || !lastName || !email || !username || !password) {
+                showAlert('Please fill in all fields.'); return;
+            }
+            if (!validateEmail(email)) { showAlert('Please enter a valid email.'); return; }
+            if (username.length < 3)   { showAlert('Username must be at least 3 characters.'); return; }
+            if (password.length < 8)   { showAlert('Password must be at least 8 characters.'); return; }
+            if (password !== confirm)   { showAlert('Passwords do not match.'); return; }
+
+            const btn = document.getElementById('registerBtn');
+            btn.disabled = true;
+            btn.textContent = 'Creating account…';
+
+            try {
+                const res = await fetch(API + '/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ firstName, lastName, email, username, password, accountType: selectedPlan }),
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showAlert('Account created! Check your email to verify, then sign in.', 'success');
+                    setTimeout(() => switchTab('login'), 2500);
+                } else {
+                    showAlert(data.message || 'Registration failed. Please try again.');
+                }
+            } catch (err) {
+                showAlert('Cannot reach server. Make sure the backend is running.');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Account';
+            }
+        }
+
+        // ── Forgot password ────────────────────────────
+        async function handleForgot() {
+            hideAlert();
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!validateEmail(email)) { showAlert('Please enter a valid email.'); return; }
+
+            try {
+                const res = await fetch(API + '/api/auth/forgot-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email }),
+                });
+                showAlert('If that email exists, a reset link has been sent.', 'success');
+            } catch (err) {
+                showAlert('Cannot reach server.');
+            }
+        }
+
+        // ── Allow Enter key to submit ──────────────────
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            const activePanel = document.querySelector('.auth-panel.active');
+            if (!activePanel) return;
+            if (activePanel.id === 'panelLogin')    handleLogin();
+            if (activePanel.id === 'panelRegister') handleRegister();
+            if (activePanel.id === 'panelForgot')   handleForgot();
+        });
+
+        // ── Pre-fill tab from URL path or legacy hash ──
+        const _initPath = location.pathname;
+        if (_initPath === '/register' || location.hash === '#register') switchTab('register');
+        else if (_initPath === '/forgot-password') switchTab('forgot');
+        // else default: login tab is already active
+    </script>
+
+</body>
+</html>

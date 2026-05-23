@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Checkout Cancelled</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 3rem 1.5rem; text-align: center;
+        }
+
+        .cancel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 3rem 2.5rem;
+            max-width: 460px; width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            animation: slide-up 0.3s ease;
+        }
+
+        @keyframes slide-up {
+            from { opacity:0; transform:translateY(20px); }
+            to   { opacity:1; transform:none; }
+        }
+
+        .cancel-icon {
+            font-size: 2.5rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            width: 70px; height: 70px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .cancel-card h1 {
+            font-family: var(--display); font-size: 1.5rem; font-weight: 800;
+            letter-spacing: -0.03em; color: var(--text); margin-bottom: 0.5rem;
+        }
+
+        .cancel-card p {
+            font-size: 0.82rem; color: var(--muted); line-height: 1.75;
+            margin-bottom: 1.75rem;
+        }
+
+        .cancel-card .cta-group {
+            display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;
+        }
+
+        .cta-primary {
+            display: inline-block;
+            font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none;
+            background: var(--accent); color: #fff; border: 1px solid var(--accent);
+            transition: background 0.2s;
+        }
+        .cta-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+
+        .cta-outline {
+            display: inline-block;
+            font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.07em; text-transform: uppercase;
+            padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none;
+            background: transparent; color: var(--text); border: 1px solid var(--border);
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .cta-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+        .note {
+            font-size: 0.72rem; color: var(--muted);
+            margin-top: 1.5rem; padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+    <script src="js/guard.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="/" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="main">
+        <div class="cancel-card">
+            <div class="cancel-icon">✕</div>
+            <h1>Checkout Cancelled</h1>
+            <p>
+                No worries — no payment was taken and your account was not changed.
+                You can upgrade whenever you're ready.
+            </p>
+
+            <div class="cta-group">
+                <a id="retry-btn" href="/checkout" class="cta-primary">↩ View Plans</a>
+                <a href="/" class="cta-outline">← Back to Home</a>
+            </div>
+
+            <div class="note">
+                Questions? <a href="/support" style="color:var(--accent)">Contact support</a> — we're happy to help.
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a>
+    </footer>
+
+    <script>
+        /* Preserve the plan param on the retry button */
+        const plan = new URLSearchParams(location.search).get('plan');
+        if (plan) {
+            document.getElementById('retry-btn').href = `checkout.html?plan=${plan}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Support - FaceBlurr</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #111827; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #111827; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="background-color: #1e1e2e; border: 1px solid #f97316; border-radius: 12px; overflow: hidden;">
+          
+          <!-- Header -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); padding: 25px 40px; text-align: center; border-bottom: 2px solid #22c55e;">
+              <h1 style="margin: 0; color: #f97316; font-size: 24px; font-weight: bold;">
+                💬 FaceBlurr Support
+              </h1>
+              <p style="margin: 8px 0 0 0; color: #22c55e; font-size: 13px; font-weight: bold;">
+                We're here to help!
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Ticket Info Badge -->
+          <tr>
+            <td style="padding: 30px 40px 20px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border-radius: 8px; overflow: hidden;">
+                <tr>
+                  <td style="padding: 15px 20px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td>
+                          <span style="color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Ticket ID</span>
+                          <p style="margin: 5px 0 0 0; color: #f97316; font-size: 18px; font-weight: bold; font-family: monospace;">
+                            #{{TICKET_ID}}
+                          </p>
+                        </td>
+                        <td style="text-align: right;">
+                          <span style="background-color: {{STATUS_BG}}; color: {{STATUS_TEXT}}; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: bold; text-transform: uppercase;">
+                            {{TICKET_STATUS}}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Greeting -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <p style="margin: 0; color: #e2e8f0; font-size: 16px; line-height: 1.6;">
+                Hello <span style="color: #22c55e; font-weight: bold;">{{USERNAME}}</span>,
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Response Type Indicator -->
+          <tr>
+            <td style="padding: 0 40px 20px 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="background-color: #22c55e; color: #000000; padding: 8px 16px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                    📧 {{RESPONSE_TYPE}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Support Message -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border-left: 4px solid #22c55e; border-radius: 4px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 12px;">
+                      <span style="color: #22c55e; font-weight: bold;">Support Agent</span> • {{RESPONSE_DATE}}
+                    </p>
+                    <div style="color: #e2e8f0; font-size: 15px; line-height: 1.7;">
+                      {{SUPPORT_MESSAGE}}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Original Inquiry Reference -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #2a2a3e; border: 1px solid #35354d; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 15px 20px;">
+                    <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">
+                      Your Original Inquiry
+                    </p>
+                    <p style="margin: 0; color: #999999; font-size: 14px; line-height: 1.5; font-style: italic;">
+                      "{{ORIGINAL_MESSAGE}}"
+                    </p>
+                    <p style="margin: 10px 0 0 0; color: #64748b; font-size: 11px;">
+                      Submitted: {{ORIGINAL_DATE}}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Action Steps (Optional - instructions for the user) -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #f97316; font-size: 16px; font-weight: bold;">
+                📋 Next Steps
+              </h3>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #2a2a3e;">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="width: 30px; vertical-align: top;">
+                          <span style="background-color: #22c55e; color: #000000; width: 22px; height: 22px; border-radius: 50%; display: inline-block; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold;">1</span>
+                        </td>
+                        <td style="padding-left: 10px;">
+                          <p style="margin: 0; color: #e2e8f0; font-size: 14px;">
+                            {{STEP_1}}
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0; border-bottom: 1px solid #2a2a3e;">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="width: 30px; vertical-align: top;">
+                          <span style="background-color: #22c55e; color: #000000; width: 22px; height: 22px; border-radius: 50%; display: inline-block; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold;">2</span>
+                        </td>
+                        <td style="padding-left: 10px;">
+                          <p style="margin: 0; color: #e2e8f0; font-size: 14px;">
+                            {{STEP_2}}
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 0;">
+                    <table role="presentation" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="width: 30px; vertical-align: top;">
+                          <span style="background-color: #22c55e; color: #000000; width: 22px; height: 22px; border-radius: 50%; display: inline-block; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold;">3</span>
+                        </td>
+                        <td style="padding-left: 10px;">
+                          <p style="margin: 0; color: #e2e8f0; font-size: 14px;">
+                            {{STEP_3}}
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Reply CTA -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;" align="center">
+              <p style="margin: 0 0 15px 0; color: #94a3b8; font-size: 13px;">
+                Need further assistance?
+              </p>
+              <a href="{{REPLY_LINK}}" style="display: inline-block; background-color: #22c55e; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 35px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 230, 118, 0.4);">
+                Reply to Ticket
+              </a>
+            </td>
+          </tr>
+          
+          <!-- Helpful Resources -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top: 1px solid #35354d; padding-top: 20px;">
+                <tr>
+                  <td>
+                    <h4 style="margin: 0 0 15px 0; color: #f97316; font-size: 14px;">
+                      📚 Helpful Resources
+                    </h4>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td width="50%" style="padding-right: 10px; vertical-align: top;">
+                          <a href="{{FAQ_LINK}}" style="display: block; background-color: #111827; padding: 15px; border-radius: 8px; text-decoration: none; border: 1px solid #35354d;">
+                            <p style="margin: 0 0 5px 0; color: #f97316; font-size: 13px; font-weight: bold;">
+                              📖 FAQ
+                            </p>
+                            <p style="margin: 0; color: #94a3b8; font-size: 11px;">
+                              Common questions answered
+                            </p>
+                          </a>
+                        </td>
+                        <td width="50%" style="padding-left: 10px; vertical-align: top;">
+                          <a href="{{GUIDES_LINK}}" style="display: block; background-color: #111827; padding: 15px; border-radius: 8px; text-decoration: none; border: 1px solid #35354d;">
+                            <p style="margin: 0 0 5px 0; color: #f97316; font-size: 13px; font-weight: bold;">
+                              🎓 Guides
+                            </p>
+                            <p style="margin: 0; color: #94a3b8; font-size: 11px;">
+                              Step-by-step tutorials
+                            </p>
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Satisfaction Rating -->
+          <tr>
+            <td style="padding: 0 40px 25px 40px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #111827; border-radius: 8px;">
+                <tr>
+                  <td style="padding: 20px; text-align: center;">
+                    <p style="margin: 0 0 12px 0; color: #e2e8f0; font-size: 14px;">
+                      How would you rate this support response?
+                    </p>
+                    <table role="presentation" cellspacing="0" cellpadding="0" align="center">
+                      <tr>
+                        <td style="padding: 0 5px;">
+                          <a href="{{RATING_LINK_1}}" style="text-decoration: none; font-size: 28px;">😞</a>
+                        </td>
+                        <td style="padding: 0 5px;">
+                          <a href="{{RATING_LINK_2}}" style="text-decoration: none; font-size: 28px;">😐</a>
+                        </td>
+                        <td style="padding: 0 5px;">
+                          <a href="{{RATING_LINK_3}}" style="text-decoration: none; font-size: 28px;">🙂</a>
+                        </td>
+                        <td style="padding: 0 5px;">
+                          <a href="{{RATING_LINK_4}}" style="text-decoration: none; font-size: 28px;">😊</a>
+                        </td>
+                        <td style="padding: 0 5px;">
+                          <a href="{{RATING_LINK_5}}" style="text-decoration: none; font-size: 28px;">🤩</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #111827; padding: 25px 40px; border-top: 1px solid #35354d;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>
+                    <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 12px;">
+                      <strong style="color: #f97316;">Support Hours:</strong> Monday - Friday, 9AM - 6PM EST
+                    </p>
+                    <p style="margin: 0 0 10px 0; color: #94a3b8; font-size: 12px;">
+                      <strong style="color: #f97316;">Email:</strong> 
+                      <a href="mailto:support@FaceBlurr.com" style="color: #22c55e; text-decoration: none;">support@FaceBlurr.com</a>
+                    </p>
+                    <p style="margin: 15px 0 0 0; color: #64748b; font-size: 11px; text-align: center;">
+                      © {{YEAR}} FaceBlurr. All rights reserved.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

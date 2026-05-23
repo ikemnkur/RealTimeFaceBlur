@@ -7,6 +7,8 @@
     <title>Face Blur — Video</title>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
@@ -412,6 +414,39 @@
             cursor: crosshair;
         }
 
+        /* ── MODE SELECTOR ── */
+        .setting-row select#modeSelect option[value="auto"]   { color: var(--accent); }
+        .setting-row select#modeSelect option[value="manual"] { color: var(--green); }
+        .setting-row select#modeSelect option[value="hybrid"] { color: var(--accent2); }
+
+        /* ── COUNTDOWN OVERLAY ── */
+        .countdown-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            background: rgba(0, 0, 0, 0.45);
+            transition: opacity 0.25s;
+            z-index: 10;
+        }
+        .countdown-overlay.visible { opacity: 1; }
+        .countdown-number {
+            font-family: var(--display);
+            font-size: clamp(5rem, 20vw, 9rem);
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 60px rgba(124, 108, 252, 0.9), 0 0 20px rgba(124, 108, 252, 0.6);
+            animation: cd-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes cd-pop {
+            0%   { transform: scale(1.6); opacity: 0; }
+            30%  { opacity: 1; }
+            100% { transform: scale(1);   opacity: 1; }
+        }
+
         /* ── UPLOAD MODAL ── */
         .modal-overlay {
             display: none;
@@ -526,19 +561,62 @@
                 min-width: auto;
             }
         }
+
+        /* ── PREVIEW PiP ── */
+        .preview-pip {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 28%;
+            min-width: 72px;
+            max-width: 176px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.75);
+            display: none;
+            background: #000;
+            z-index: 5;
+        }
+        .preview-pip.visible { display: block; }
+        #previewCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: none;
+            background: #000;
+        }
+        .preview-pip-label {
+            position: absolute;
+            top: 5px;
+            left: 6px;
+            font-size: 0.58rem;
+            font-family: var(--mono);
+            color: rgba(255, 255, 255, 0.85);
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
     </style>
 </head>
 
 <body>
+    <script>FaceBlurAuth.requirePlan('pro');</script>
 
     <nav>
-        <div class="logo">◈ Face Blur</div>
+        <a href="/" class="logo">◈ Face Blur</a>
         <ul>
-            <li><a href="index.html">Home</a></li>
-            <li><a href="webcam.html">Webcam</a></li>
-            <li><a href="video.html" class="active">Video</a></li>
-            <li><a href="tutorial.html">Tutorial</a></li>
-            <li><a href="support.html">Support</a></li>
+            <li><a href="/">Home</a></li>
+            <li><a href="/webcam">Webcam</a></li>
+            <li><a href="/video">Video</a></li>
+            <!-- <li><a href="/video-pro" class="nav-pro active">Pro ✦</a></li>
+            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
+            <li><a href="/tutorial">Tutorial</a></li>
+            <li><a href="/support">Support</a></li>
+            <li><a href="/login" class="nav-cta">Sign In</a></li>
         </ul>
     </nav>
 
@@ -574,6 +652,15 @@
                     </div>
 
                     <div class="setting-row">
+                        <label>Mode</label>
+                        <select id="modeSelect">
+                            <option value="auto" selected>Auto — AI blur</option>
+                            <option value="manual">Manual — Click blur</option>
+                            <option value="hybrid">Hybrid — Both</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
                         <label>Output Resolution</label>
                         <select id="resolutionSelect">
                             <option value="1">Original (100%)</option>
@@ -591,8 +678,8 @@
 
                     <div class="setting-row">
                         <label>Detection Interval</label>
-                        <input type="range" id="detectionRate" min="100" max="1000" value="300" step="50">
-                        <span class="setting-val" id="rateValue">300ms</span>
+                        <input type="range" id="detectionRate" min="25" max="500" value="250" step="25">
+                        <span class="setting-val" id="rateValue">250</span>
                     </div>
 
                     <div class="setting-row">
@@ -610,9 +697,18 @@
                     <div class="setting-row">
                         <label>Mask Type</label>
                         <select id="maskTypeSelect">
-                            <option value="blur" selected>Blur (Pixelated)</option>
+                            <option value="blur" selected>Pixelated</option>
+                            <option value="smooth">Smooth Blur</option>
                             <option value="black">Black Ellipse</option>
+                            <option value="image">Custom Image</option>
                         </select>
+                    </div>
+
+                    <div class="setting-row" id="maskImageRow" style="display:none">
+                        <label>Mask Image</label>
+                        <button id="uploadMaskBtn" style="flex:1">📷 Upload…</button>
+                        <input type="file" id="uploadMaskInput" accept="image/*" style="display:none">
+                        <img id="maskPreview" style="display:none;width:36px;height:36px;border-radius:5px;border:1px solid var(--border);object-fit:cover;flex-shrink:0">
                     </div>
 
                     <div class="setting-row">
@@ -632,6 +728,42 @@
                         <button id="clickBlurBtn" style="flex:1">✦ Off</button>
                     </div>
 
+                    <div class="setting-row">
+                        <label>CB Size</label>
+                        <input type="range" id="cbSize" min="10" max="120" value="40" step="5">
+                        <span class="setting-val" id="cbSizeValue">40px</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>CB Fade Time</label>
+                        <input type="range" id="cbFade" min="0.1" max="3" value="0.4" step="0.1">
+                        <span class="setting-val" id="cbFadeValue">0.4s</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>CB Opacity</label>
+                        <input type="range" id="cbAlpha" min="0.1" max="1" value="1" step="0.05">
+                        <span class="setting-val" id="cbAlphaValue">1.00</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>CB Offset X</label>
+                        <input type="range" id="cbOffsetX" min="-80" max="80" value="0" step="1">
+                        <span class="setting-val" id="cbOffsetXValue">0px</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>CB Offset Y</label>
+                        <input type="range" id="cbOffsetY" min="-80" max="80" value="-32" step="1">
+                        <span class="setting-val" id="cbOffsetYValue">-32px</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Preview Advance</label>
+                        <input type="range" id="previewAdvanceIn" min="0.5" max="2" value="1" step="0.1">
+                        <span class="setting-val" id="previewAdvanceVal">1.0s</span>
+                    </div>
+
                     <!-- TF.js tensor memory meter -->
                     <div class="mem-bar-wrap">
                         <label>TF Memory</label>
@@ -648,7 +780,13 @@
                 <!-- Canvas -->
                 <div class="canvas-wrap" id="canvasWrap">
                     <video id="inputVideo" muted playsinline></video>
+                    <video id="previewVideo" muted playsinline></video>
                     <canvas id="outputCanvas"></canvas>
+                    <div id="countdownOverlay" class="countdown-overlay"></div>
+                    <div class="preview-pip" id="previewPip">
+                        <canvas id="previewCanvas"></canvas>
+                        <span class="preview-pip-label" id="previewPipLabel">⚡ +1.0s preview</span>
+                    </div>
                 </div>
 
                 <!-- Playback controls -->
@@ -671,7 +809,7 @@
     </div>
 
     <footer>
-        &copy; 2026 Face Blur App · <a href="support.html">Support</a>
+        &copy; 2026 Face Blur App · <a href="/support">Support</a>
     </footer>
 
     <script>
@@ -708,9 +846,32 @@
         const maxFacesVal = document.getElementById('maxFacesValue');
         const clickBlurBtn = document.getElementById('clickBlurBtn');
         const canvasWrap = document.getElementById('canvasWrap');
+        const cbSizeIn     = document.getElementById('cbSize');
+        const cbSizeVal    = document.getElementById('cbSizeValue');
+        const cbFadeIn     = document.getElementById('cbFade');
+        const cbFadeVal    = document.getElementById('cbFadeValue');
+        const cbAlphaIn    = document.getElementById('cbAlpha');
+        const cbAlphaVal   = document.getElementById('cbAlphaValue');
+        const cbOffsetXIn  = document.getElementById('cbOffsetX');
+        const cbOffsetXVal = document.getElementById('cbOffsetXValue');
+        const cbOffsetYIn  = document.getElementById('cbOffsetY');
+        const cbOffsetYVal = document.getElementById('cbOffsetYValue');
         const uploadModal   = document.getElementById('uploadModal');
         const openUploadBtn = document.getElementById('openUploadBtn');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const modeSelect       = document.getElementById('modeSelect');
+        const countdownOverlay = document.getElementById('countdownOverlay');
+        const previewPip    = document.getElementById('previewPip');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const previewCtx    = previewCanvas.getContext('2d');
+        const previewVideo  = document.getElementById('previewVideo');
+        const previewPipLabel     = document.getElementById('previewPipLabel');
+        const previewAdvanceIn    = document.getElementById('previewAdvanceIn');
+        const previewAdvanceValEl = document.getElementById('previewAdvanceVal');
+        const maskImageRow    = document.getElementById('maskImageRow');
+        const uploadMaskBtn   = document.getElementById('uploadMaskBtn');
+        const uploadMaskInput = document.getElementById('uploadMaskInput');
+        const maskPreview     = document.getElementById('maskPreview');
 
         // ── Modal open / close ──
         function openModal()  { uploadModal.classList.add('open'); }
@@ -730,6 +891,9 @@
         let cachedFaces = [];
         let lastDetectMs = 0;
         let detectPending = false;
+        let blurMode = 'auto';   // 'auto' | 'manual' | 'hybrid'
+        let previewAdvance = 1.0; // seconds the PiP leads main playback
+        let lastPreviewSyncMs = 0;
 
         // ─────────────────────────────────────────────
         //  User settings (live)
@@ -738,17 +902,23 @@
         let resScale = 0.5;
         let detectInterval = 300;
         let sensitivity = 0.70;
-        let maskType = 'blur';    // 'blur' or 'black'
+        let maskType = 'blur';    // 'blur' | 'smooth' | 'black' | 'image'
+        let customMaskImage = null;
         let sizeOffset = 0;         // px offset to enlarge/shrink mask
         let falloffTime = 1.0;       // seconds to hold mask after face lost
         const FADE_DURATION_S = 0.4;    // seconds to fade out after holdoff expires
         let maxFaces = 1;         // max number of faces to blur (1–3)
 
         // Mouse / touch click-blur state
-        let mouseBlurEnabled = false;
-        let mouseBlurPos = null;  // { x, y } in canvas pixels, or null
-        let mouseBlurHeld = false;
+        let mouseBlurEnabled    = false;
+        let mouseBlurPos        = null;  // { x, y } in canvas pixels, or null
+        let mouseBlurHeld       = false;
         let mouseBlurReleasedAt = 0;     // performance.now() timestamp of last release
+        let cbSize      = 40;   // click-blur radius
+        let cbFadeTime  = 0.4;  // seconds to fade out on release
+        let cbAlpha     = 1.0;  // max opacity
+        let cbOffsetX   = 0;    // horizontal offset in canvas px
+        let cbOffsetY   = -32;  // vertical offset in canvas px
 
 
         // ─────────────────────────────────────────────
@@ -776,6 +946,24 @@
 
         maskTypeSelect.addEventListener('change', e => {
             maskType = e.target.value;
+            maskImageRow.style.display = maskType === 'image' ? 'flex' : 'none';
+        });
+
+        uploadMaskBtn.addEventListener('click', () => uploadMaskInput.click());
+        uploadMaskInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/')) return;
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                if (customMaskImage?._objURL) URL.revokeObjectURL(customMaskImage._objURL);
+                img._objURL = url;
+                customMaskImage = img;
+                maskPreview.src = url;
+                maskPreview.style.display = 'block';
+                uploadMaskBtn.textContent = '✓ ' + file.name.slice(0, 18);
+            };
+            img.src = url;
         });
 
         sizeOffsetIn.addEventListener('input', e => {
@@ -798,8 +986,105 @@
             clickBlurBtn.classList.toggle('btn-active', mouseBlurEnabled);
             clickBlurBtn.textContent = mouseBlurEnabled ? '✦ On' : '✦ Off';
             canvasWrap.classList.toggle('click-blur-mode', mouseBlurEnabled);
-            if (!mouseBlurEnabled) { mouseBlurPos = null; mouseBlurHeld = false; }
+            if (!mouseBlurEnabled) {
+                mouseBlurPos = null;
+                mouseBlurHeld = false;
+                // Let the normal video-driven loop decide whether to keep going.
+                // If video is paused/ended, stop now; if playing, leave it.
+                if (!isRunning || video.paused || video.ended) {
+                    isRunning = false;
+                    if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+                }
+            } else {
+                // Start the loop if it isn't already running (e.g. video is paused).
+                if (!isRunning) {
+                    isRunning = true;
+                    rafId = requestAnimationFrame(renderFrame);
+                }
+            }
+            syncPreviewPip();
         });
+
+        cbSizeIn.addEventListener('input', e => {
+            cbSize = +e.target.value;
+            cbSizeVal.textContent = cbSize + 'px';
+        });
+        cbFadeIn.addEventListener('input', e => {
+            cbFadeTime = +e.target.value;
+            cbFadeVal.textContent = cbFadeTime.toFixed(1) + 's';
+        });
+        cbAlphaIn.addEventListener('input', e => {
+            cbAlpha = +e.target.value;
+            cbAlphaVal.textContent = cbAlpha.toFixed(2);
+        });
+        cbOffsetXIn.addEventListener('input', e => {
+            cbOffsetX = +e.target.value;
+            cbOffsetXVal.textContent = cbOffsetX + 'px';
+        });
+        cbOffsetYIn.addEventListener('input', e => {
+            cbOffsetY = +e.target.value;
+            cbOffsetYVal.textContent = cbOffsetY + 'px';
+        });
+
+        previewAdvanceIn.addEventListener('input', e => {
+            previewAdvance = +e.target.value;
+            previewAdvanceValEl.textContent = previewAdvance.toFixed(1) + 's';
+            previewPipLabel.textContent = `⚡ +${previewAdvance.toFixed(1)}s preview`;
+            lastPreviewSyncMs = 0; // force immediate resync on next frame
+        });
+
+        // ── Preview PiP sync ──
+        function syncPreviewPip() {
+            const show = mouseBlurEnabled && video.readyState >= 2;
+            previewPip.classList.toggle('visible', show);
+            if (show) {
+                const target = Math.min(video.currentTime + previewAdvance, video.duration || 0);
+                if (video.paused) {
+                    previewVideo.pause();
+                    previewVideo.currentTime = target;
+                } else if (previewVideo.paused) {
+                    previewVideo.currentTime = target;
+                    previewVideo.play().catch(() => {});
+                }
+            } else {
+                previewVideo.pause();
+            }
+        }
+
+        // ── Mode selector ──
+        function applyMode(mode) {
+            blurMode = mode;
+            if (mode === 'auto') {
+                // AI only — disable click blur
+                mouseBlurEnabled = false;
+                mouseBlurPos = null;
+                mouseBlurHeld = false;
+                clickBlurBtn.classList.remove('btn-active');
+                clickBlurBtn.textContent = '✦ Off';
+                canvasWrap.classList.remove('click-blur-mode');
+            } else if (mode === 'manual') {
+                // Click blur only — pause AI and clear any cached detections
+                mouseBlurEnabled = true;
+                clickBlurBtn.classList.add('btn-active');
+                clickBlurBtn.textContent = '✦ On';
+                canvasWrap.classList.add('click-blur-mode');
+                cachedFaces = [];  // clear stale AI overlays
+                // Keep render loop alive for click-blur even if video is paused
+                if (!isRunning) {
+                    isRunning = true;
+                    rafId = requestAnimationFrame(renderFrame);
+                }
+            } else { // hybrid
+                // Both AI and click blur
+                mouseBlurEnabled = true;
+                clickBlurBtn.classList.add('btn-active');
+                clickBlurBtn.textContent = '✦ On';
+                canvasWrap.classList.add('click-blur-mode');
+            }
+            syncPreviewPip();
+        }
+
+        modeSelect.addEventListener('change', e => applyMode(e.target.value));
 
         // ─────────────────────────────────────────────
         //  Click-blur canvas events
@@ -915,6 +1200,16 @@
             playPauseBtn.textContent = '▶ Play';
         });
 
+        video.addEventListener('play',  syncPreviewPip);
+        video.addEventListener('pause', syncPreviewPip);
+        video.addEventListener('seeked', () => {
+            if (previewPip.classList.contains('visible')) {
+                const target = Math.min(video.currentTime + previewAdvance, video.duration || 0);
+                previewVideo.currentTime = target;
+                lastPreviewSyncMs = performance.now(); // reset drift timer
+            }
+        });
+
         // ─────────────────────────────────────────────
         //  Face detection — runs in a separate async
         //  task so it never blocks the render loop.
@@ -1019,24 +1314,43 @@
             if (!isRunning) return;
             rafId = requestAnimationFrame(renderFrame);
 
-            if (video.paused || video.ended || video.readyState < 2) return;
+            const videoReady = video.readyState >= 2;
+            const videoActive = videoReady && !video.paused && !video.ended;
 
-            // 1. Draw current video frame
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // When video has a frame (playing OR paused), redraw it so every
+            // tick starts from a clean slate — essential for the pixelation
+            // readback and so stale mouse-blur patches don't accumulate.
+            if (videoReady && canvas.width > 0) {
+                // 1. Draw current video frame
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 2. Apply AI face masks (handles its own alpha / falloff logic)
-            if (cachedFaces.length > 0) applyBlur(now);
+                // 2. Apply AI face masks (skipped in Manual mode)
+                if (blurMode !== 'manual' && cachedFaces.length > 0) applyBlur(now);
+            }
 
-            // 2b. Apply manual click-blur on top
+            // 3. Draw preview PiP (Manual / Hybrid mode — 1 s ahead)
+            if (previewPip.classList.contains('visible') && previewVideo.readyState >= 2 && previewCanvas.width > 0) {
+                previewCtx.drawImage(previewVideo, 0, 0, previewCanvas.width, previewCanvas.height);
+                // Drift correction: re-sync if offset drifts > 200 ms
+                if (now - lastPreviewSyncMs > 500) {
+                    lastPreviewSyncMs = now;
+                    const target = video.currentTime + previewAdvance;
+                    if (target < video.duration && Math.abs(previewVideo.currentTime - target) > 0.2) {
+                        previewVideo.currentTime = target;
+                    }
+                }
+            }
+
+            // 4. Apply manual click-blur (runs even when video is paused)
             applyMouseBlur(now);
 
-            // 3. Kick off detection if enough time has passed
-            if (now - lastDetectMs >= detectInterval) {
+            // 4. Kick off detection only while video is playing and not in Manual mode
+            if (blurMode !== 'manual' && videoActive && now - lastDetectMs >= detectInterval) {
                 lastDetectMs = now;
                 runDetection();   // fire-and-forget; updates cachedFaces async
             }
 
-            // 4. Update memory meter (every ~60 frames ≈ 1s)
+            // 5. Update memory meter (every ~60 frames ≈ 1s)
             if (Math.random() < 0.016) updateMemMeter();
         }
 
@@ -1078,6 +1392,37 @@
                     ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
                     ctx.fillStyle = grad;
                     ctx.fill();
+                } else if (maskType === 'smooth') {
+                    // Smooth blur — two passes for strong edge suppression
+                    const x = Math.max(0, centerX - r);
+                    const y = Math.max(0, centerY - r);
+                    const w = Math.min(r * 2, canvas.width - x);
+                    const h = Math.min(r * 2, canvas.height - y);
+                    if (w > 0 && h > 0) {
+                        const blurPx = Math.max(10, Math.round(r / 2));
+                        const W = Math.round(w), H = Math.round(h);
+                        // Pass 1
+                        const tmp1 = document.createElement('canvas');
+                        tmp1.width = W; tmp1.height = H;
+                        const tctx1 = tmp1.getContext('2d');
+                        tctx1.filter = `blur(${blurPx}px)`;
+                        tctx1.drawImage(canvas, x, y, w, h, 0, 0, W, H);
+                        // Pass 2 — blur the already-blurred result
+                        const tmp2 = document.createElement('canvas');
+                        tmp2.width = W; tmp2.height = H;
+                        const tctx2 = tmp2.getContext('2d');
+                        tctx2.filter = `blur(${blurPx}px)`;
+                        tctx2.drawImage(tmp1, 0, 0);
+                        ctx.beginPath();
+                        ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                        ctx.clip();
+                        ctx.drawImage(tmp2, 0, 0, W, H, x, y, w, h);
+                    }
+                } else if (maskType === 'image' && customMaskImage) {
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(customMaskImage, centerX - r, centerY - r, r * 2, r * 2);
                 } else {
                     // Pixelated blur effect
                     const x = Math.max(0, centerX - r);
@@ -1117,16 +1462,17 @@
         function applyMouseBlur(now) {
             if (!mouseBlurEnabled || !mouseBlurPos) return;
 
-            let alpha = 1.0;
+            let alpha = cbAlpha;
             if (!mouseBlurHeld) {
                 const elapsed = now - mouseBlurReleasedAt;
-                alpha = 1.0 - elapsed / (FADE_DURATION_S * 1000);
+                alpha = cbAlpha * (1.0 - elapsed / (cbFadeTime * 1000));
                 if (alpha <= 0) { mouseBlurPos = null; return; } // fully faded — reset
             }
 
-            const r = blurRadius + sizeOffset;
+            const r = cbSize;
             if (r <= 0) return;
-            const { x: centerX, y: centerY } = mouseBlurPos;
+            const centerX = mouseBlurPos.x + cbOffsetX;
+            const centerY = mouseBlurPos.y + cbOffsetY;
 
             ctx.save();
             ctx.globalAlpha = alpha;
@@ -1143,6 +1489,35 @@
                 ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
+            } else if (maskType === 'smooth') {
+                // Smooth blur — two passes for strong edge suppression
+                const x = Math.max(0, centerX - r);
+                const y = Math.max(0, centerY - r);
+                const w = Math.min(r * 2, canvas.width - x);
+                const h = Math.min(r * 2, canvas.height - y);
+                if (w > 0 && h > 0) {
+                    const blurPx = Math.max(10, Math.round(r / 2));
+                    const W = Math.round(w), H = Math.round(h);
+                    const tmp1 = document.createElement('canvas');
+                    tmp1.width = W; tmp1.height = H;
+                    const tctx1 = tmp1.getContext('2d');
+                    tctx1.filter = `blur(${blurPx}px)`;
+                    tctx1.drawImage(canvas, x, y, w, h, 0, 0, W, H);
+                    const tmp2 = document.createElement('canvas');
+                    tmp2.width = W; tmp2.height = H;
+                    const tctx2 = tmp2.getContext('2d');
+                    tctx2.filter = `blur(${blurPx}px)`;
+                    tctx2.drawImage(tmp1, 0, 0);
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(tmp2, 0, 0, W, H, x, y, w, h);
+                }
+            } else if (maskType === 'image' && customMaskImage) {
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, r, r, 0, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(customMaskImage, centerX - r, centerY - r, r * 2, r * 2);
             } else {
                 const x = Math.max(0, centerX - r);
                 const y = Math.max(0, centerY - r);
@@ -1179,6 +1554,9 @@
         }
 
         function stopLoop() {
+            // If click-blur is active keep the rAF loop alive so mouse-blur
+            // rendering continues to work even when the video is paused/ended.
+            if (mouseBlurEnabled) return;
             isRunning = false;
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         }
@@ -1190,11 +1568,15 @@
             stopLoop();
             if (video.src) URL.revokeObjectURL(video.src);
 
-            video.src = URL.createObjectURL(file);
+            const url = URL.createObjectURL(file);
+            video.src = url;
+            previewVideo.src = url; // same URL — both elements buffer independently
             video.muted = false;
 
             video.onloadedmetadata = () => {
                 resizeCanvas();
+                previewCanvas.width  = Math.round(video.videoWidth  * 0.5);
+                previewCanvas.height = Math.round(video.videoHeight * 0.5);
                 videoControls.classList.add('active');
                 processBtn.disabled = false;
                 cachedFaces = [];
@@ -1202,6 +1584,7 @@
                 video.play();
                 playPauseBtn.textContent = '⏸ Pause';
                 startLoop();
+                syncPreviewPip();
             };
         }
 
@@ -1250,10 +1633,10 @@
         //  Restarts video from beginning, starts recording,
         //  and auto-downloads when the video ends.
         // ─────────────────────────────────────────────
-        processBtn.onclick = () => {
-            recordedChunks = [];
-
-            // Restart video from the top
+        // ─────────────────────────────────────────────
+        //  Starts the actual recording after countdown.
+        // ─────────────────────────────────────────────
+        function beginRecording() {
             video.currentTime = 0;
             video.play();
             playPauseBtn.textContent = '⏸ Pause';
@@ -1279,7 +1662,6 @@
             };
 
             mediaRecorder.start(500);
-            processBtn.disabled = true;
             processBtn.textContent = '⏳ Processing…';
             setStatus('recording', '⏺ Recording — will download when video ends');
 
@@ -1290,6 +1672,34 @@
                 stopLoop();
                 playPauseBtn.textContent = '▶ Play';
             });
+        }
+
+        processBtn.onclick = () => {
+            recordedChunks = [];
+            processBtn.disabled = true;
+            video.pause();
+            video.currentTime = 0;
+
+            // 3-second countdown before recording starts
+            let count = 3;
+            countdownOverlay.innerHTML = `<span class="countdown-number">${count}</span>`;
+            countdownOverlay.classList.add('visible');
+            processBtn.textContent = `⏳ Starting in ${count}…`;
+            setStatus('active', `▶ Starting in ${count}…`);
+
+            const tick = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownOverlay.innerHTML = `<span class="countdown-number">${count}</span>`;
+                    processBtn.textContent = `⏳ Starting in ${count}…`;
+                    setStatus('active', `▶ Starting in ${count}…`);
+                } else {
+                    clearInterval(tick);
+                    countdownOverlay.classList.remove('visible');
+                    setTimeout(() => { countdownOverlay.innerHTML = ''; }, 300);
+                    beginRecording();
+                }
+            }, 1000);
         };
 
         // ─────────────────────────────────────────────
