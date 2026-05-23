@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Home</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .hero {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 1.5rem 5rem;
+            text-align: center;
+        }
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.72rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent);
+            border: 1px solid rgba(124,108,252,0.3);
+            background: rgba(124,108,252,0.08);
+            padding: 0.3rem 0.85rem;
+            border-radius: 999px;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 {
+            font-family: var(--display);
+            font-size: clamp(2.4rem, 8vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 1.1;
+            margin-bottom: 1.2rem;
+            max-width: 700px;
+        }
+        .hero h1 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-sub { font-size: 0.9rem; color: var(--muted); line-height: 1.8; max-width: 500px; margin-bottom: 2.25rem; }
+        .hero-cta { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; margin-bottom: 3.5rem; }
+        .hero-cta a { font-family: var(--mono); font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; padding: 0.7rem 1.5rem; border-radius: 8px; text-decoration: none; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+        .cta-primary  { background: var(--accent);  color: #fff; border: 1px solid var(--accent); }
+        .cta-primary:hover  { background: var(--accent2)!important; border-color: var(--accent2)!important; }
+        .cta-secondary { background: transparent; color: var(--text); border: 1px solid var(--border); }
+        .cta-secondary:hover { border-color: var(--accent)!important; color: var(--accent)!important; }
+        .app-cards { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 1rem; width: 100%; max-width: 920px; margin-bottom: 3.5rem; }
+        .app-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.75rem; text-decoration: none; color: var(--text); display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s; text-align: left; }
+        .app-card:hover { transform: translateY(-4px); border-color: rgba(124,108,252,0.4); box-shadow: 0 16px 48px rgba(124,108,252,0.12); }
+        .app-card-icon { font-size: 1.8rem; line-height: 1; }
+        .app-card h2 { font-family: var(--display); font-size: 1rem; font-weight: 700; margin: 0; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .app-card p { font-size: 0.78rem; color: var(--muted); line-height: 1.7; margin: 0; }
+        .card-arrow { margin-top: auto; font-size: 0.72rem; color: var(--accent); letter-spacing: 0.04em; }
+        .features { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; }
+        .feature-pill { font-size: 0.72rem; letter-spacing: 0.05em; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 0.3rem 0.85rem; border-radius: 999px; }
+        .pricing-strip { width: 100%; max-width: 920px; margin: 0 0 3.5rem; }
+        .pricing-strip h2 { font-family: var(--display); font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; text-align: center; margin-bottom: 1.25rem; }
+        .pricing-strip h2 span { background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 1rem; }
+        .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .price-card.featured { border-color: rgba(124,108,252,0.5); background: rgba(124,108,252,0.06); }
+        .plan-name { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+        .plan-price { font-family: var(--display); font-size: 2rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+        .plan-price span { font-size: 0.8rem; font-family: var(--mono); color: var(--muted); font-weight: 400; }
+        .price-card ul { list-style: none; margin: 0.25rem 0 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; }
+        .price-card ul li { font-size: 0.76rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+        .price-card ul li::before { content: '✓'; color: var(--green); font-size: 0.7rem; flex-shrink: 0; }
+        .plan-cta { display: block; text-align: center; font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; padding: 0.55rem 1rem; border-radius: 7px; text-decoration: none; transition: background 0.2s, border-color 0.2s, color 0.2s; border: 1px solid var(--border); color: var(--text); background: var(--surface2); margin-top: auto; }
+        .price-card.featured .plan-cta { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .plan-cta:hover { border-color: var(--accent)!important; color: var(--accent)!important; background: transparent!important; }
+        .price-card.featured .plan-cta:hover { background: var(--accent2)!important; border-color: var(--accent2)!important; color: #fff!important; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">◈ Face Blur</a>
+        <ul>
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="webcam.html">Webcam</a></li>
+            <li><a href="video.html">Video</a></li>
+            <li><a href="tutorial.html">Tutorial</a></li>
+            <li><a href="support.html">Support</a></li>
+            <li><a href="login.html" class="nav-cta">Sign In</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-eyebrow">✦ Privacy-First AI · Runs 100% in your browser</div>
+        <h1>Blur faces.<br><span>Protect privacy.</span></h1>
+        <p class="hero-sub">AI-powered real-time face blurring for webcam feeds and pre-recorded videos. No uploads. No servers. Completely local.</p>
+        <div class="hero-cta">
+            <a href="video.html" class="cta-primary">▶ Try Video Blur</a>
+            <a href="webcam.html" class="cta-secondary">📹 Open Webcam</a>
+        </div>
+
+        <div class="app-cards">
+            <a href="webcam.html" class="app-card">
+                <div class="app-card-icon">📹</div>
+                <h2>Webcam Mode</h2>
+                <p>Blur faces live from your camera. Ideal for video calls, streaming, and recording.</p>
+                <div class="card-arrow">Open Webcam →</div>
+            </a>
+            <a href="video.html" class="app-card">
+                <div class="app-card-icon">🎬</div>
+                <h2>Video Upload</h2>
+                <p>Drop in an MP4, WebM, or MOV. Preview with blurring applied, then export the result.</p>
+                <div class="card-arrow">Upload Video →</div>
+            </a>
+            <a href="tutorial.html" class="app-card">
+                <div class="app-card-icon">📚</div>
+                <h2>Tutorial</h2>
+                <p>Step-by-step guides, settings explained, and best practices for every use case.</p>
+                <div class="card-arrow">Read Guide →</div>
+            </a>
+        </div>
+
+        <div class="pricing-strip">
+            <h2>Simple, transparent <span>pricing</span></h2>
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <div class="plan-name">Free</div>
+                    <div class="plan-price">$0 <span>/ month</span></div>
+                    <ul>
+                        <li>AI auto face blur</li>
+                        <li>Up to 75% output resolution</li>
+                        <li>1 face at a time</li>
+                        <li>Click blur (limited)</li>
+                    </ul>
+                    <a href="video.html" class="plan-cta">Start Free</a>
+                </div>
+                <div class="price-card featured">
+                    <div class="plan-name">Pro &nbsp;<span style="color:var(--accent)">✦ Popular</span></div>
+                    <div class="plan-price">$2.99 <span>/ month</span></div>
+                    <ul>
+                        <li>Everything in Free</li>
+                        <li>Full original resolution</li>
+                        <li>Up to 3 faces at once</li>
+                        <li>Faster detection (150ms+)</li>
+                        <li>Full click blur controls</li>
+                    </ul>
+                    <a href="login.html#register" class="plan-cta">Get Pro</a>
+                </div>
+                <div class="price-card">
+                    <div class="plan-name">Advanced</div>
+                    <div class="plan-price">$4.99 <span>/ month</span></div>
+                    <ul>
+                        <li>Everything in Pro</li>
+                        <li>Manual-only click blur mode</li>
+                        <li>No AI inference overhead</li>
+                        <li>Optimised memory usage</li>
+                    </ul>
+                    <a href="login.html#register" class="plan-cta">Get Advanced</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-pill">✨ AI-Powered Detection</div>
+            <div class="feature-pill">⚡ Real-Time Processing</div>
+            <div class="feature-pill">🔒 Privacy First</div>
+            <div class="feature-pill">🎨 Customizable</div>
+            <div class="feature-pill">💾 Local Export</div>
+            <div class="feature-pill">🌐 No Installation</div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Face Blur App · <a href="support.html">Support</a> · <a href="tutorial.html">Tutorial</a> · <a href="login.html">Sign In</a>
+    </footer>
+</body>
+</html>
