@@ -8,6 +8,7 @@
     "preview": "vite preview --port 5174"
   },
   "devDependencies": {
+    "nunjucks": "^3.2.4",
     "vite": "^6.0.0"
   }
 }

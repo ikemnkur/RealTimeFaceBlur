@@ -222,16 +222,7 @@
 </head>
 <body>
 
-    <nav>
-        <a href="/" class="logo">◈ Face Blur</a>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/webcam">Webcam</a></li>
-            <li><a href="/video">Video</a></li>
-            <li><a href="/tutorial">Tutorial</a></li>
-            <li><a href="/support">Support</a></li>
-        </ul>
-    </nav>
+    {% include "_partials/nav.html" %}
 
     <div class="auth-wrap">
         <div class="auth-card">
@@ -367,9 +358,7 @@
         </div>
     </div>
 
-    <footer>
-        &copy; 2026 Face Blur App · <a href="/support">Support</a> · <a href="/tutorial">Tutorial</a>
-    </footer>
+    {% include "_partials/footer.html" %}
 
     <script>
         const _h = window.location.hostname;

@@ -1,4 +1,33 @@
 import { defineConfig } from 'vite';
+import nunjucks from 'nunjucks';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Nunjucks plugin — processes every HTML file through Nunjucks before
+ * it is served (dev) or written to dist (build). Use standard Nunjucks
+ * syntax in any .html file:
+ *   {% include "_partials/nav.html" %}
+ *   {% set activePage = "webcam" %}
+ */
+function nunjucksPlugin() {
+  const env = new nunjucks.Environment(
+    new nunjucks.FileSystemLoader(__dirname),
+    { autoescape: false, throwOnUndefined: false }
+  );
+
+  return {
+    name: 'nunjucks-html',
+    transformIndexHtml: {
+      enforce: 'pre',
+      transform(html) {
+        return env.renderString(html, {});
+      },
+    },
+  };
+}
 
 // Maps clean URL paths → actual HTML files served by the dev server.
 // Vercel handles the same mapping in vercel.json via "rewrites".
@@ -8,6 +37,7 @@ const ROUTE_MAP = {
   '/forgot-password': '/login.html',
   '/webcam':          '/webcam.html',
   '/video':           '/video.html',
+  '/video-free':      '/video-free.html',
   '/video-pro':       '/video-pro.html',
   '/video-advanced':  '/video-advanced.html',
   '/tutorial':        '/tutorial.html',
@@ -34,7 +64,7 @@ function cleanRoutesPlugin() {
 }
 
 export default defineConfig({
-  plugins: [cleanRoutesPlugin()],
+  plugins: [nunjucksPlugin(), cleanRoutesPlugin()],
   root: '.',
   // Treat all HTML files as entry points
   build: {
@@ -44,6 +74,7 @@ export default defineConfig({
         login:        'login.html',
         webcam:       'webcam.html',
         video:        'video.html',
+        videoFree:    'video-free.html',
         videoPro:     'video-pro.html',
         videoAdv:     'video-advanced.html',
         videoMobile:  'video-mobile.html',

@@ -606,19 +606,8 @@
 <body>
     <script>FaceBlurAuth.requirePlan('pro');</script>
 
-    <nav>
-        <a href="/" class="logo">◈ Face Blur</a>
-        <ul>
-            <li><a href="/">Home</a></li>
-            <li><a href="/webcam">Webcam</a></li>
-            <li><a href="/video">Video</a></li>
-            <!-- <li><a href="/video-pro" class="nav-pro active">Pro ✦</a></li>
-            <li><a href="/video-advanced" class="nav-adv">Advanced ✦</a></li> -->
-            <li><a href="/tutorial">Tutorial</a></li>
-            <li><a href="/support">Support</a></li>
-            <li><a href="/login" class="nav-cta">Sign In</a></li>
-        </ul>
-    </nav>
+{% set activePage = "video" %}
+    {% include "_partials/nav.html" %}
 
     <div class="main">
         <!-- <h1 class="page-title">Video <span>Face Blur</span></h1> -->
@@ -808,9 +797,7 @@
         </div>
     </div>
 
-    <footer>
-        &copy; 2026 Face Blur App · <a href="/support">Support</a>
-    </footer>
+    {% include "_partials/footer.html" %}
 
     <script>
         // ─────────────────────────────────────────────
