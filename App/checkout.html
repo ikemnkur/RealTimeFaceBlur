@@ -227,6 +227,9 @@
         const PLAN_RANK = { free: 0, pro: 1, advanced: 2 };
 
         plans.forEach(plan => {
+            /* Hide cards that weren't chosen when a plan is pre-selected via URL */
+            if (preselect && plan.id !== preselect) return;
+
             const isCurrentPlan = plan.id === userPlan;
             const isLower       = PLAN_RANK[plan.id] < PLAN_RANK[userPlan];
             const isPopular     = plan.id === 'pro';
@@ -279,9 +282,41 @@
             const btn = document.getElementById('btn-' + planId);
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<span class="spinner"></span>Redirecting to Stripe…';
+                btn.innerHTML = '<span class="spinner"></span>Processing…';
             }
+
+            /* ── Upgrade path: user already has an active subscription ── */
+            const isUpgrade = auth.accountType && auth.accountType !== 'free';
+            if (isUpgrade) {
+                setStatus('Applying plan change…');
+                try {
+                    const res = await fetch(`${API}/api/subscription/upgrade`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${localStorage.getItem('fb_token')}`
+                        },
+                        body: JSON.stringify({ planId, planName })
+                    });
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.message || 'Upgrade failed');
+
+                    /* Refresh token so the new accountType is stored locally */
+                    setStatus('Plan updated! Refreshing your account…', 'success');
+                    await window.FaceBlurAuth.refreshToken();
+
+                    const returnDest = returnTo || `${FRONTEND}/video-pro`;
+                    setTimeout(() => { location.href = returnDest; }, 1200);
+                } catch (err) {
+                    setStatus('Error: ' + err.message, 'error');
+                    if (btn) { btn.disabled = false; btn.innerHTML = `✦ Upgrade to ${planName}`; }
+                }
+                return;
+            }
+
+            /* ── New subscription path ── */
             setStatus('Creating checkout session…');
+            if (btn) btn.innerHTML = '<span class="spinner"></span>Redirecting to Stripe…';
 
             try {
                 const res = await fetch(`${API}/api/subscription/create-checkout`, {

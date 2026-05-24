@@ -194,7 +194,27 @@
             }, 1000);
         }
 
-        /* ── Step 1: refresh JWT to get updated accountType ── */
+        /* ── Step 1: activate subscription directly from the Stripe session ── */
+        /* This is the primary activation path when webhooks are unavailable   */
+        const sessionId = params.get('session_id');
+        if (sessionId) {
+            setLoading('Activating your subscription…');
+            try {
+                const token = localStorage.getItem('fb_token');
+                const verifyRes = await fetch(
+                    `${window.FaceBlurAuth.API}/api/subscription/verify-session?session_id=${encodeURIComponent(sessionId)}`,
+                    { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+                );
+                const verifyData = await verifyRes.json();
+                if (!verifyData.success) {
+                    console.warn('verify-session:', verifyData.message);
+                }
+            } catch (e) {
+                console.warn('verify-session error:', e);
+            }
+        }
+
+        /* ── Step 2: refresh JWT to get updated accountType ── */
         setLoading('Refreshing your account…');
 
         let refreshed = false;

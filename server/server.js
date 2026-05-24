@@ -1832,6 +1832,70 @@ server.post(PROXY + '/api/subscription/create-checkout', async (req, res) => {
     }
 });
 
+// ── Upgrade / downgrade an existing subscription ──────────────────────────
+server.post(PROXY + '/api/subscription/upgrade', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { planId, planName } = req.body;
+
+        const PLAN_PRICE_MAP = {
+            pro:      process.env.STRIPE_PRICE_PRO,
+            advanced: process.env.STRIPE_PRICE_ADVANCED,
+        };
+        const newPriceId = PLAN_PRICE_MAP[planId];
+        if (!newPriceId) {
+            return res.status(400).json({ success: false, message: 'Invalid plan' });
+        }
+
+        const existingSub = await knex('subscriptions')
+            .where({ user_id: userId })
+            .whereIn('status', ['active', 'trialing'])
+            .orderBy('created_at', 'desc')
+            .first();
+
+        if (!existingSub) {
+            return res.status(400).json({ success: false, message: 'No active subscription found to upgrade' });
+        }
+
+        // Retrieve live subscription from Stripe to get the current item id
+        const stripeSub = await stripe.subscriptions.retrieve(existingSub.stripe_subscription_id);
+        const itemId = stripeSub.items.data[0]?.id;
+        if (!itemId) {
+            return res.status(500).json({ success: false, message: 'Could not locate subscription item in Stripe' });
+        }
+
+        // Update the subscription to the new price (proration applied automatically)
+        const updated = await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
+            items: [{ id: itemId, price: newPriceId }],
+            proration_behavior: 'create_prorations',
+            metadata: { planId, planName: planName || planId },
+        });
+
+        const resolvedPlanName = planName || (planId.charAt(0).toUpperCase() + planId.slice(1));
+
+        // Sync DB
+        await knex('subscriptions')
+            .where({ stripe_subscription_id: existingSub.stripe_subscription_id })
+            .update({
+                plan_id:              planId,
+                plan_name:            resolvedPlanName,
+                status:               updated.status,
+                current_period_start: new Date(updated.current_period_start * 1000),
+                current_period_end:   new Date(updated.current_period_end   * 1000),
+                updated_at:           new Date(),
+            });
+
+        await knex('userData').where({ id: userId }).update({ accountType: planId });
+
+        console.log(`✅ Subscription upgraded: user=${userId} → plan=${planId}`);
+
+        res.json({ success: true, planId, planName: resolvedPlanName, status: updated.status });
+    } catch (error) {
+        console.error('Upgrade subscription error:', error);
+        res.status(500).json({ success: false, message: 'Failed to upgrade subscription' });
+    }
+});
+
 // ── Plans catalogue (public) ──────────────────────────────────────────────
 server.get(PROXY + '/api/subscription/plans', (req, res) => {
     res.json({
@@ -1955,7 +2019,9 @@ server.get(PROXY + '/api/subscription/verify-session', async (req, res) => {
             expand: ['subscription', 'customer']
         });
 
-        if (session.payment_status === 'paid' && session.subscription) {
+        // For subscriptions Stripe may return payment_status='no_payment_required' on free trials,
+        // so check session.status === 'complete' as the authoritative gate instead.
+        if ((session.status === 'complete' || session.payment_status === 'paid') && session.subscription) {
             const subscription = session.subscription;
 
             // client_reference_id may be "userId_planId" (payment link flow) or plain userId

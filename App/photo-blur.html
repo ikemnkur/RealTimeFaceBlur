@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Photo Blur</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#7c6cfc">
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1.5rem 4rem;
+            gap: 1.5rem;
+            max-width: 1000px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header { text-align: center; }
+        .page-header .eyebrow {
+            display: inline-block;
+            font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent); background: rgba(124,108,252,0.1);
+            border: 1px solid rgba(124,108,252,0.25);
+            padding: 0.25rem 0.8rem; border-radius: 999px; margin-bottom: 0.75rem;
+        }
+        .page-header h1 {
+            font-family: var(--display); font-size: clamp(1.6rem,4vw,2.4rem);
+            font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 0.5rem;
+        }
+        .page-header h1 span { background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-header p { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+
+        /* ── Drop zone ── */
+        .drop-zone {
+            width: 100%; max-width: 640px;
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: var(--surface);
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--accent);
+            background: rgba(124,108,252,0.06);
+        }
+        .drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .drop-zone p { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+        .drop-zone strong { color: var(--accent); }
+        #file-input { display: none; }
+
+        /* ── Editor layout ── */
+        .editor { display: none; flex-direction: column; align-items: center; gap: 1.25rem; width: 100%; }
+
+        /* ── Canvas wrap ── */
+        .canvas-wrap {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 0 0 1px var(--border), 0 20px 60px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            max-width: 100%;
+            background: #000;
+            line-height: 0;
+        }
+        #main-canvas { display: block; max-width: 100%; height: auto; }
+
+        /* ── Controls row ── */
+        .ctrl-row {
+            display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center;
+            width: 100%;
+        }
+
+        /* ── Settings panel ── */
+        .settings {
+            width: 100%; max-width: 640px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem 1.5rem;
+            display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center;
+        }
+        .setting-item { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 160px; }
+        .setting-item label { font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+        .setting-item input[type=range] {
+            -webkit-appearance: none; appearance: none;
+            width: 100%; height: 4px;
+            background: var(--surface2); border-radius: 999px; outline: none;
+        }
+        .setting-item input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 14px; height: 14px;
+            background: var(--accent); border-radius: 50%; cursor: pointer;
+        }
+        .setting-item select {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); font-family: var(--mono); font-size: 0.78rem;
+            padding: 0.45rem 0.75rem; border-radius: 8px; outline: none; cursor: pointer;
+        }
+        .setting-item select:focus { border-color: var(--accent); }
+        .val-label { font-size: 0.72rem; color: var(--accent); }
+
+        /* ── Region list ── */
+        .region-list {
+            width: 100%; max-width: 640px;
+        }
+        .region-list-title {
+            font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 0.6rem;
+        }
+        .region-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.6rem 0.9rem;
+            font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem;
+        }
+        .region-item .region-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .region-item .region-info { flex: 1; }
+        .region-item button {
+            font-size: 0.68rem; padding: 0.2rem 0.55rem; border-radius: 6px;
+            color: var(--red); border-color: rgba(248,113,113,0.3);
+            background: rgba(248,113,113,0.07);
+        }
+        .region-item button:hover { background: rgba(248,113,113,0.15); border-color: var(--red); }
+        .empty-hint { font-size: 0.76rem; color: var(--muted); text-align: center; padding: 1rem 0; }
+
+        /* ── Action row ── */
+        .action-row { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+    </style>
+</head>
+<body>
+    {% set activePage = "photo-blur" %}
+    {% include "_partials/nav.html" %}
+
+    <div class="main">
+        <div class="page-header">
+            <div class="eyebrow">✦ Free Tool</div>
+            <h1>Photo <span>Blur</span></h1>
+            <p>Upload an image, draw rectangles over areas you want blurred, then download.</p>
+        </div>
+
+        <!-- Upload -->
+        <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="image/*">
+            <div class="drop-icon">🖼️</div>
+            <p><strong>Click to upload</strong> or drag &amp; drop an image here</p>
+            <p>JPEG, PNG, WEBP, GIF — processed entirely in your browser</p>
+        </div>
+
+        <!-- Editor (shown after upload) -->
+        <div class="editor" id="editor">
+
+            <div class="settings">
+                <div class="setting-item">
+                    <label>Blur strength <span class="val-label" id="blur-val">18px</span></label>
+                    <input type="range" id="blur-range" min="4" max="60" value="18">
+                </div>
+                <div class="setting-item">
+                    <label>Shape</label>
+                    <select id="shape-select">
+                        <option value="rect">Rectangle</option>
+                        <option value="ellipse">Ellipse</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="canvas-wrap" id="canvas-wrap">
+                <canvas id="main-canvas"></canvas>
+            </div>
+
+            <div class="region-list" id="region-list">
+                <div class="region-list-title">Blur regions</div>
+                <div id="regions-container">
+                    <p class="empty-hint">Draw on the image above to add blur regions.</p>
+                </div>
+            </div>
+
+            <div class="action-row">
+                <button id="btn-clear" class="btn">✕ Clear all</button>
+                <button id="btn-download" class="btn btn-primary">⬇ Download image</button>
+                <button id="btn-reset" class="btn" style="border-color:rgba(248,113,113,0.3);color:var(--red)">↩ New image</button>
+            </div>
+        </div>
+    </div>
+
+    {% include "_partials/footer.html" %}
+
+    <script>
+    (function () {
+        /* ── Refs ── */
+        const dropZone    = document.getElementById('drop-zone');
+        const fileInput   = document.getElementById('file-input');
+        const editor      = document.getElementById('editor');
+        const canvas      = document.getElementById('main-canvas');
+        const ctx         = canvas.getContext('2d');
+        const blurRange   = document.getElementById('blur-range');
+        const blurVal     = document.getElementById('blur-val');
+        const shapeSelect = document.getElementById('shape-select');
+        const regionsContainer = document.getElementById('regions-container');
+        const btnClear    = document.getElementById('btn-clear');
+        const btnDownload = document.getElementById('btn-download');
+        const btnReset    = document.getElementById('btn-reset');
+
+        /* ── State ── */
+        let sourceImage = null;
+        let regions     = [];        // { x, y, w, h, radius, shape, color }
+        let drawing     = false;
+        let startX = 0, startY = 0;
+        let currentRect = null;
+
+        /* ── Colour palette for region badges ── */
+        const COLORS = ['#7c6cfc','#22d3a0','#c084fc','#fbbf24','#f87171','#38bdf8'];
+        let colorIdx = 0;
+        function nextColor() { return COLORS[colorIdx++ % COLORS.length]; }
+
+        /* ── Drop / file handling ── */
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) loadFile(file);
+        });
+
+        function loadFile(file) {
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => {
+                sourceImage = img;
+                regions = [];
+                colorIdx = 0;
+                /* Fit canvas to max 840px wide */
+                const MAX_W = 840;
+                const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+                canvas.width  = Math.round(img.width  * scale);
+                canvas.height = Math.round(img.height * scale);
+                redraw();
+                dropZone.style.display = 'none';
+                editor.style.display   = 'flex';
+                updateRegionList();
+            };
+            img.src = url;
+        }
+
+        /* ── Blur strength display ── */
+        blurRange.addEventListener('input', () => {
+            blurVal.textContent = blurRange.value + 'px';
+            redraw();
+        });
+
+        /* ── Drawing on canvas ── */
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width  / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const src = e.touches ? e.touches[0] : e;
+            return {
+                x: Math.round((src.clientX - rect.left)  * scaleX),
+                y: Math.round((src.clientY - rect.top)   * scaleY),
+            };
+        }
+
+        canvas.addEventListener('mousedown',  onStart);
+        canvas.addEventListener('mousemove',  onMove);
+        canvas.addEventListener('mouseup',    onEnd);
+        canvas.addEventListener('mouseleave', onEnd);
+        canvas.addEventListener('touchstart', e => { e.preventDefault(); onStart(e); }, { passive: false });
+        canvas.addEventListener('touchmove',  e => { e.preventDefault(); onMove(e);  }, { passive: false });
+        canvas.addEventListener('touchend',   e => { e.preventDefault(); onEnd(e);   }, { passive: false });
+
+        function onStart(e) {
+            if (!sourceImage) return;
+            drawing = true;
+            const p = getPos(e);
+            startX = p.x; startY = p.y;
+            currentRect = { x: p.x, y: p.y, w: 0, h: 0 };
+        }
+
+        function onMove(e) {
+            if (!drawing || !currentRect) return;
+            const p = getPos(e);
+            currentRect.x = Math.min(p.x, startX);
+            currentRect.y = Math.min(p.y, startY);
+            currentRect.w = Math.abs(p.x - startX);
+            currentRect.h = Math.abs(p.y - startY);
+            redraw(currentRect);
+        }
+
+        function onEnd() {
+            if (!drawing) return;
+            drawing = false;
+            if (currentRect && currentRect.w > 4 && currentRect.h > 4) {
+                regions.push({
+                    ...currentRect,
+                    radius: parseInt(blurRange.value, 10),
+                    shape:  shapeSelect.value,
+                    color:  nextColor(),
+                    id:     Date.now(),
+                });
+                updateRegionList();
+                redraw();
+            }
+            currentRect = null;
+        }
+
+        /* ── Redraw ── */
+        function redraw(preview) {
+            if (!sourceImage) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+
+            /* Apply saved regions */
+            regions.forEach(r => applyBlur(r));
+
+            /* Preview while dragging */
+            if (preview && preview.w > 0 && preview.h > 0) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(124,108,252,0.8)';
+                ctx.lineWidth   = 2;
+                ctx.setLineDash([5, 4]);
+                if (shapeSelect.value === 'ellipse') {
+                    ctx.beginPath();
+                    ctx.ellipse(preview.x + preview.w/2, preview.y + preview.h/2, preview.w/2, preview.h/2, 0, 0, Math.PI*2);
+                    ctx.stroke();
+                } else {
+                    ctx.strokeRect(preview.x, preview.y, preview.w, preview.h);
+                }
+                ctx.restore();
+            }
+        }
+
+        function applyBlur(r) {
+            const tmp = document.createElement('canvas');
+            tmp.width  = canvas.width;
+            tmp.height = canvas.height;
+            const tctx = tmp.getContext('2d');
+            tctx.filter = `blur(${r.radius}px)`;
+            tctx.drawImage(sourceImage, 0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.beginPath();
+            if (r.shape === 'ellipse') {
+                ctx.ellipse(r.x + r.w/2, r.y + r.h/2, r.w/2, r.h/2, 0, 0, Math.PI*2);
+            } else {
+                ctx.rect(r.x, r.y, r.w, r.h);
+            }
+            ctx.clip();
+            ctx.drawImage(tmp, 0, 0);
+            ctx.restore();
+        }
+
+        /* ── Region list ── */
+        function updateRegionList() {
+            if (!regions.length) {
+                regionsContainer.innerHTML = '<p class="empty-hint">Draw on the image above to add blur regions.</p>';
+                return;
+            }
+            regionsContainer.innerHTML = regions.map((r, i) => `
+                <div class="region-item">
+                    <div class="region-dot" style="background:${r.color}"></div>
+                    <span class="region-info">
+                        Region ${i + 1} &nbsp;·&nbsp; ${r.shape} &nbsp;·&nbsp;
+                        ${r.w}×${r.h}px at (${r.x}, ${r.y}) &nbsp;·&nbsp; blur ${r.radius}px
+                    </span>
+                    <button onclick="removeRegion(${r.id})">✕ Remove</button>
+                </div>
+            `).join('');
+        }
+
+        window.removeRegion = function(id) {
+            regions = regions.filter(r => r.id !== id);
+            updateRegionList();
+            redraw();
+        };
+
+        /* ── Controls ── */
+        btnClear.addEventListener('click', () => {
+            regions = [];
+            colorIdx = 0;
+            updateRegionList();
+            redraw();
+        });
+
+        btnReset.addEventListener('click', () => {
+            sourceImage = null;
+            regions = [];
+            colorIdx = 0;
+            editor.style.display   = 'none';
+            dropZone.style.display = '';
+            fileInput.value = '';
+        });
+
+        btnDownload.addEventListener('click', () => {
+            /* Export at full original resolution */
+            const outCanvas = document.createElement('canvas');
+            outCanvas.width  = sourceImage.naturalWidth;
+            outCanvas.height = sourceImage.naturalHeight;
+            const outCtx = outCanvas.getContext('2d');
+            outCtx.drawImage(sourceImage, 0, 0);
+
+            const scaleX = sourceImage.naturalWidth  / canvas.width;
+            const scaleY = sourceImage.naturalHeight / canvas.height;
+
+            regions.forEach(r => {
+                const tmp = document.createElement('canvas');
+                tmp.width  = outCanvas.width;
+                tmp.height = outCanvas.height;
+                const tctx = tmp.getContext('2d');
+                const blurPx = Math.round(r.radius * Math.max(scaleX, scaleY));
+                tctx.filter = `blur(${blurPx}px)`;
+                tctx.drawImage(sourceImage, 0, 0);
+
+                outCtx.save();
+                outCtx.beginPath();
+                const rx = r.x * scaleX, ry = r.y * scaleY;
+                const rw = r.w * scaleX, rh = r.h * scaleY;
+                if (r.shape === 'ellipse') {
+                    outCtx.ellipse(rx + rw/2, ry + rh/2, rw/2, rh/2, 0, 0, Math.PI*2);
+                } else {
+                    outCtx.rect(rx, ry, rw, rh);
+                }
+                outCtx.clip();
+                outCtx.drawImage(tmp, 0, 0);
+                outCtx.restore();
+            });
+
+            const link = document.createElement('a');
+            link.download = 'photo-blur-output.png';
+            link.href = outCanvas.toDataURL('image/png');
+            link.click();
+        });
+    })();
+    </script>
+</body>
+</html>

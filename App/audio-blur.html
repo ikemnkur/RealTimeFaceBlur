@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Blur — Audio Censor</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#7c6cfc">
+    <link rel="stylesheet" href="style.css">
+    <script src="js/guard.js"></script>
+    <style>
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2.5rem 1.5rem 4rem;
+            gap: 1.5rem;
+            max-width: 860px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        .page-header { text-align: center; }
+        .page-header .eyebrow {
+            display: inline-block;
+            font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--accent); background: rgba(124,108,252,0.1);
+            border: 1px solid rgba(124,108,252,0.25);
+            padding: 0.25rem 0.8rem; border-radius: 999px; margin-bottom: 0.75rem;
+        }
+        .page-header h1 {
+            font-family: var(--display); font-size: clamp(1.6rem,4vw,2.4rem);
+            font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 0.5rem;
+        }
+        .page-header h1 span { background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-header p { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+
+        /* ── Drop zone ── */
+        .drop-zone {
+            width: 100%;
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: var(--surface);
+        }
+        .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent); background: rgba(124,108,252,0.06); }
+        .drop-zone .drop-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+        .drop-zone p { font-size: 0.8rem; color: var(--muted); line-height: 1.7; }
+        .drop-zone strong { color: var(--accent); }
+        #file-input { display: none; }
+
+        /* ── Editor ── */
+        .editor { display: none; flex-direction: column; align-items: stretch; gap: 1.25rem; width: 100%; }
+
+        /* ── File info bar ── */
+        .file-bar {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+            padding: 0.75rem 1.25rem;
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+        }
+        .file-bar .file-name { font-size: 0.8rem; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .file-bar .file-meta { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
+        /* ── Waveform ── */
+        .waveform-wrap {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1rem;
+            position: relative; overflow: hidden;
+        }
+        .waveform-label {
+            font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 0.6rem;
+        }
+        #waveform-canvas {
+            display: block; width: 100%; height: 80px;
+            border-radius: 8px; cursor: pointer;
+            background: var(--surface2);
+        }
+
+        /* ── Playback controls ── */
+        .playback-row {
+            display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.75rem;
+        }
+        .time-display {
+            font-family: var(--mono); font-size: 0.8rem; color: var(--accent);
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 8px; padding: 0.35rem 0.75rem; white-space: nowrap;
+        }
+        .playback-row .spacer { flex: 1; }
+
+        /* ── Add censor panel ── */
+        .add-panel {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 14px; padding: 1.25rem 1.5rem;
+        }
+        .add-panel-title {
+            font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1rem;
+        }
+        .add-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: flex-end; }
+        .field { display: flex; flex-direction: column; gap: 0.35rem; }
+        .field label { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+        .field input[type=number], .field input[type=text], .field select {
+            background: var(--surface2); border: 1px solid var(--border);
+            color: var(--text); font-family: var(--mono); font-size: 0.78rem;
+            padding: 0.45rem 0.75rem; border-radius: 8px; outline: none; width: 120px;
+        }
+        .field input[type=number]:focus, .field select:focus { border-color: var(--accent); }
+        .field select { width: 160px; cursor: pointer; }
+        #btn-use-current {
+            font-size: 0.72rem; padding: 0.45rem 0.9rem; border-radius: 8px;
+            color: var(--accent); border-color: rgba(124,108,252,0.3);
+            background: rgba(124,108,252,0.07); align-self: flex-end;
+        }
+        #btn-use-current:hover { background: rgba(124,108,252,0.15); }
+
+        /* ── Censor list ── */
+        .censor-list-wrap { }
+        .censor-list-title {
+            font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 0.6rem;
+        }
+        .censor-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.65rem 1rem;
+            font-size: 0.75rem; color: var(--muted); margin-bottom: 0.5rem;
+        }
+        .censor-item .ci-index {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(124,108,252,0.15); border: 1px solid rgba(124,108,252,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; color: var(--accent); flex-shrink: 0;
+        }
+        .censor-item .ci-info { flex: 1; }
+        .censor-item .ci-sound {
+            font-size: 0.68rem; background: var(--surface2); border: 1px solid var(--border);
+            border-radius: 6px; padding: 0.2rem 0.55rem; color: var(--muted);
+        }
+        .censor-item button {
+            font-size: 0.68rem; padding: 0.2rem 0.55rem; border-radius: 6px;
+            color: var(--red); border-color: rgba(248,113,113,0.3);
+            background: rgba(248,113,113,0.07);
+        }
+        .censor-item button:hover { background: rgba(248,113,113,0.15); border-color: var(--red); }
+        .empty-hint { font-size: 0.76rem; color: var(--muted); text-align: center; padding: 1rem 0; }
+
+        /* ── Process / export ── */
+        .action-row { display: flex; gap: 0.75rem; flex-wrap: wrap; justify-content: center; }
+
+        /* ── Progress bar ── */
+        #progress-wrap { display: none; width: 100%; }
+        .progress-bar-bg {
+            width: 100%; height: 6px; background: var(--surface2); border-radius: 999px; overflow: hidden; margin-bottom: 0.5rem;
+        }
+        .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; transition: width 0.2s; width: 0%; }
+        #progress-msg { font-size: 0.76rem; color: var(--muted); text-align: center; }
+
+        /* Spinner */
+        .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.25); border-top-color:#fff; border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 0.35rem; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    {% set activePage = "audio-blur" %}
+    {% include "_partials/nav.html" %}
+
+    <div class="main">
+        <div class="page-header">
+            <div class="eyebrow">✦ Free Tool</div>
+            <h1>Audio <span>Censor</span></h1>
+            <p>Upload an audio or video file, mark the moments you want censored, and download the result.</p>
+        </div>
+
+        <!-- Upload -->
+        <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept="audio/*,video/*">
+            <div class="drop-icon">🎙️</div>
+            <p><strong>Click to upload</strong> or drag &amp; drop an audio / video file</p>
+            <p>MP3, WAV, OGG, M4A, MP4, WEBM — processed entirely in your browser</p>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor" id="editor">
+
+            <!-- File info -->
+            <div class="file-bar">
+                <span class="file-name" id="file-name-label">—</span>
+                <span class="file-meta" id="file-meta-label">—</span>
+                <button id="btn-new-file" style="font-size:0.72rem;padding:0.3rem 0.7rem;color:var(--red);border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.07)">↩ New file</button>
+            </div>
+
+            <!-- Waveform -->
+            <div class="waveform-wrap">
+                <div class="waveform-label">Waveform — click to seek</div>
+                <canvas id="waveform-canvas"></canvas>
+                <div class="playback-row">
+                    <button id="btn-play" class="btn btn-primary">▶ Play</button>
+                    <div class="time-display" id="time-display">0:00 / 0:00</div>
+                    <div class="spacer"></div>
+                    <button id="btn-use-current">⊕ Use current time</button>
+                </div>
+            </div>
+
+            <!-- Add censor -->
+            <div class="add-panel">
+                <div class="add-panel-title">Add censor point</div>
+                <div class="add-row">
+                    <div class="field">
+                        <label>Start (seconds)</label>
+                        <input type="number" id="inp-start" min="0" step="0.1" value="0" placeholder="0.0">
+                    </div>
+                    <div class="field">
+                        <label>Duration (seconds)</label>
+                        <input type="number" id="inp-duration" min="0.1" step="0.1" value="1.0" placeholder="1.0">
+                    </div>
+                    <div class="field">
+                        <label>Censor sound</label>
+                        <select id="inp-sound">
+                            <option value="bleep">📣 Classic bleep (1kHz)</option>
+                            <option value="beep">🔔 High beep (1.5kHz)</option>
+                            <option value="low">🔉 Low tone (440Hz)</option>
+                            <option value="silence">🔇 Silence</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" id="btn-add-censor" style="align-self:flex-end">+ Add</button>
+                </div>
+            </div>
+
+            <!-- Censor list -->
+            <div class="censor-list-wrap">
+                <div class="censor-list-title">Censor points <span id="censor-count" style="color:var(--accent)"></span></div>
+                <div id="censors-container">
+                    <p class="empty-hint">No censor points added yet.</p>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div id="progress-wrap">
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill"></div></div>
+                <p id="progress-msg">Processing…</p>
+            </div>
+
+            <!-- Actions -->
+            <div class="action-row">
+                <button class="btn" id="btn-clear-all">✕ Clear all</button>
+                <button class="btn btn-primary" id="btn-process">⬇ Process &amp; Download</button>
+            </div>
+        </div>
+    </div>
+
+    {% include "_partials/footer.html" %}
+
+    <script>
+    (function () {
+        /* ── Refs ── */
+        const dropZone      = document.getElementById('drop-zone');
+        const fileInput     = document.getElementById('file-input');
+        const editor        = document.getElementById('editor');
+        const waveCanvas    = document.getElementById('waveform-canvas');
+        const wCtx          = waveCanvas.getContext('2d');
+        const btnPlay       = document.getElementById('btn-play');
+        const timeDsp       = document.getElementById('time-display');
+        const btnUseCurrent = document.getElementById('btn-use-current');
+        const inpStart      = document.getElementById('inp-start');
+        const inpDuration   = document.getElementById('inp-duration');
+        const inpSound      = document.getElementById('inp-sound');
+        const btnAdd        = document.getElementById('btn-add-censor');
+        const censorsEl     = document.getElementById('censors-container');
+        const censorCount   = document.getElementById('censor-count');
+        const btnClearAll   = document.getElementById('btn-clear-all');
+        const btnProcess    = document.getElementById('btn-process');
+        const btnNewFile    = document.getElementById('btn-new-file');
+        const progressWrap  = document.getElementById('progress-wrap');
+        const progressFill  = document.getElementById('progress-fill');
+        const progressMsg   = document.getElementById('progress-msg');
+
+        /* ── State ── */
+        let audioBuffer  = null;   // decoded AudioBuffer
+        let audioCtx     = null;
+        let sourceNode   = null;
+        let isPlaying    = false;
+        let startedAt    = 0;
+        let pausedAt     = 0;
+        let duration     = 0;
+        let animFrame    = null;
+        let censors      = [];     // { id, start, duration, sound }
+        let fileBytes    = null;   // original ArrayBuffer for video extraction
+        let fileName     = 'output';
+        let rafId        = null;
+
+        const SOUND_LABELS = { bleep:'Classic bleep', beep:'High beep', low:'Low tone', silence:'Silence' };
+
+        /* ── Drop / file ── */
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+        });
+
+        async function loadFile(file) {
+            if (!file) return;
+            fileName = file.name.replace(/\.[^/.]+$/, '');
+            document.getElementById('file-name-label').textContent = file.name;
+            document.getElementById('file-meta-label').textContent = formatBytes(file.size);
+
+            const arrayBuf = await file.arrayBuffer();
+            fileBytes = arrayBuf.slice(0); // keep original copy
+
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            try {
+                audioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+            } catch {
+                alert('Could not decode audio from this file. Try MP3, WAV, OGG, or MP4.');
+                return;
+            }
+            duration = audioBuffer.duration;
+            censors = [];
+            pausedAt = 0;
+
+            dropZone.style.display = 'none';
+            editor.style.display   = 'flex';
+            progressWrap.style.display = 'none';
+
+            drawWaveform();
+            updateCensorList();
+            updateTimeDisplay(0);
+        }
+
+        /* ── Waveform ── */
+        function drawWaveform(currentTime) {
+            const W = waveCanvas.offsetWidth || 740;
+            const H = 80;
+            waveCanvas.width  = W;
+            waveCanvas.height = H;
+
+            const data   = audioBuffer.getChannelData(0);
+            const step   = Math.ceil(data.length / W);
+            const mid    = H / 2;
+
+            wCtx.clearRect(0, 0, W, H);
+            wCtx.fillStyle = 'var(--surface2)';
+            wCtx.fillRect(0, 0, W, H);
+
+            /* Draw censor regions */
+            censors.forEach(c => {
+                const cx = (c.start / duration) * W;
+                const cw = (c.duration / duration) * W;
+                wCtx.fillStyle = 'rgba(248,113,113,0.18)';
+                wCtx.fillRect(cx, 0, Math.max(cw, 2), H);
+            });
+
+            /* Draw waveform bars */
+            for (let i = 0; i < W; i++) {
+                let max = 0;
+                for (let j = 0; j < step; j++) {
+                    const v = Math.abs(data[i * step + j] || 0);
+                    if (v > max) max = v;
+                }
+                const barH = Math.max(1, max * mid * 1.6);
+                wCtx.fillStyle = '#3a3a52';
+                wCtx.fillRect(i, mid - barH, 1, barH * 2);
+            }
+
+            /* Playhead */
+            if (currentTime != null && duration > 0) {
+                const px = (currentTime / duration) * W;
+                wCtx.strokeStyle = 'var(--accent)';
+                wCtx.lineWidth = 2;
+                wCtx.beginPath();
+                wCtx.moveTo(px, 0);
+                wCtx.lineTo(px, H);
+                wCtx.stroke();
+            }
+        }
+
+        /* Click waveform to seek */
+        waveCanvas.addEventListener('click', e => {
+            if (!audioBuffer) return;
+            const rect = waveCanvas.getBoundingClientRect();
+            const ratio = (e.clientX - rect.left) / rect.width;
+            const seekTo = Math.max(0, Math.min(duration, ratio * duration));
+            inpStart.value = seekTo.toFixed(2);
+            if (isPlaying) {
+                stopAudio();
+                pausedAt = seekTo;
+                playAudio(seekTo);
+            } else {
+                pausedAt = seekTo;
+            }
+            updateTimeDisplay(seekTo);
+        });
+
+        /* ── Playback ── */
+        function playAudio(from) {
+            if (!audioBuffer) return;
+            sourceNode = audioCtx.createBufferSource();
+            sourceNode.buffer = audioBuffer;
+            sourceNode.connect(audioCtx.destination);
+            sourceNode.start(0, from);
+            sourceNode.onended = () => {
+                if (isPlaying) stopAudio();
+            };
+            startedAt = audioCtx.currentTime - from;
+            isPlaying = true;
+            btnPlay.innerHTML = '⏸ Pause';
+            animatePlayhead();
+        }
+
+        function stopAudio() {
+            if (sourceNode) {
+                try { sourceNode.stop(); } catch {}
+                sourceNode = null;
+            }
+            pausedAt = Math.min(audioCtx.currentTime - startedAt, duration);
+            isPlaying = false;
+            btnPlay.innerHTML = '▶ Play';
+            cancelAnimationFrame(rafId);
+        }
+
+        btnPlay.addEventListener('click', () => {
+            if (!audioBuffer) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (isPlaying) { stopAudio(); } else { playAudio(pausedAt); }
+        });
+
+        function animatePlayhead() {
+            rafId = requestAnimationFrame(() => {
+                if (!isPlaying) return;
+                const t = audioCtx.currentTime - startedAt;
+                updateTimeDisplay(t);
+                drawWaveform(t);
+                if (t < duration) animatePlayhead();
+            });
+        }
+
+        function updateTimeDisplay(t) {
+            timeDsp.textContent = `${fmt(t)} / ${fmt(duration)}`;
+        }
+
+        function fmt(s) {
+            if (!isFinite(s)) return '0:00';
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return `${m}:${sec.toString().padStart(2,'0')}`;
+        }
+
+        btnUseCurrent.addEventListener('click', () => {
+            const cur = isPlaying ? (audioCtx.currentTime - startedAt) : pausedAt;
+            inpStart.value = Math.max(0, Math.min(duration, cur)).toFixed(2);
+        });
+
+        /* ── Censor management ── */
+        btnAdd.addEventListener('click', () => {
+            const start = parseFloat(inpStart.value);
+            const dur   = parseFloat(inpDuration.value);
+            if (isNaN(start) || isNaN(dur) || dur <= 0) {
+                alert('Please enter valid start time and duration.');
+                return;
+            }
+            if (start < 0 || start >= duration) {
+                alert(`Start time must be between 0 and ${duration.toFixed(2)}s.`);
+                return;
+            }
+            censors.push({ id: Date.now(), start, duration: dur, sound: inpSound.value });
+            censors.sort((a, b) => a.start - b.start);
+            updateCensorList();
+            drawWaveform(isPlaying ? (audioCtx.currentTime - startedAt) : pausedAt);
+        });
+
+        btnClearAll.addEventListener('click', () => {
+            censors = [];
+            updateCensorList();
+            drawWaveform(isPlaying ? (audioCtx.currentTime - startedAt) : pausedAt);
+        });
+
+        window.removeCensor = function(id) {
+            censors = censors.filter(c => c.id !== id);
+            updateCensorList();
+            drawWaveform(isPlaying ? (audioCtx.currentTime - startedAt) : pausedAt);
+        };
+
+        function updateCensorList() {
+            censorCount.textContent = censors.length ? `(${censors.length})` : '';
+            if (!censors.length) {
+                censorsEl.innerHTML = '<p class="empty-hint">No censor points added yet.</p>';
+                return;
+            }
+            censorsEl.innerHTML = censors.map((c, i) => `
+                <div class="censor-item">
+                    <div class="ci-index">${i + 1}</div>
+                    <span class="ci-info">
+                        <strong style="color:var(--text)">${c.start.toFixed(2)}s</strong>
+                        &nbsp;→&nbsp; ${(c.start + c.duration).toFixed(2)}s
+                        &nbsp;·&nbsp; ${c.duration.toFixed(2)}s long
+                    </span>
+                    <span class="ci-sound">${SOUND_LABELS[c.sound] || c.sound}</span>
+                    <button onclick="removeCensor(${c.id})">✕</button>
+                </div>
+            `).join('');
+        }
+
+        /* ── Process & export ── */
+        btnProcess.addEventListener('click', async () => {
+            if (!audioBuffer) return;
+            if (isPlaying) stopAudio();
+
+            progressWrap.style.display = 'block';
+            btnProcess.disabled = true;
+            btnProcess.innerHTML = '<span class="spinner"></span>Processing…';
+            setProgress(0, 'Setting up…');
+
+            try {
+                const sampleRate   = audioBuffer.sampleRate;
+                const numChannels  = audioBuffer.numberOfChannels;
+                const totalSamples = audioBuffer.length;
+
+                const offCtx = new OfflineAudioContext(numChannels, totalSamples, sampleRate);
+
+                /* Source: original audio */
+                const srcNode = offCtx.createBufferSource();
+                srcNode.buffer = audioBuffer;
+                srcNode.connect(offCtx.destination);
+                srcNode.start();
+
+                setProgress(20, 'Building censor tones…');
+
+                /* Bleep tone frequencies */
+                const FREQS = { bleep: 1000, beep: 1500, low: 440, silence: 0 };
+
+                censors.forEach(c => {
+                    const freq = FREQS[c.sound] ?? 1000;
+                    const startSample = Math.floor(c.start * sampleRate);
+                    const durSamples  = Math.floor(c.duration * sampleRate);
+
+                    /* Silence buffer to overwrite original audio region */
+                    const silBuf = offCtx.createBuffer(numChannels, Math.min(durSamples, totalSamples - startSample), sampleRate);
+                    const silSrc = offCtx.createBufferSource();
+                    silSrc.buffer = silBuf;
+
+                    /* Gain to mute original at that region */
+                    const gainNode = offCtx.createGain();
+                    gainNode.gain.setValueAtTime(0, c.start);
+                    gainNode.gain.setValueAtTime(1, c.start + c.duration);
+
+                    if (freq > 0) {
+                        /* Create bleep tone for that region */
+                        const bleepBuf = offCtx.createBuffer(1, Math.min(durSamples, totalSamples - startSample), sampleRate);
+                        const ch = bleepBuf.getChannelData(0);
+                        const fadeLen = Math.min(Math.floor(0.005 * sampleRate), Math.floor(ch.length / 4));
+                        for (let i = 0; i < ch.length; i++) {
+                            let amp = 0.6 * Math.sin(2 * Math.PI * freq * i / sampleRate);
+                            /* Fade in/out to avoid clicks */
+                            if (i < fadeLen) amp *= i / fadeLen;
+                            if (i > ch.length - fadeLen) amp *= (ch.length - i) / fadeLen;
+                            ch[i] = amp;
+                        }
+                        const bleepSrc = offCtx.createBufferSource();
+                        bleepSrc.buffer = bleepBuf;
+                        bleepSrc.connect(offCtx.destination);
+                        bleepSrc.start(c.start);
+                    }
+                });
+
+                setProgress(40, 'Muting original at censor points…');
+
+                /* Re-render with silence over censor regions */
+                /* Use a gain automation approach: build a gain node that mutes the source */
+                const masterGain = offCtx.createGain();
+                srcNode.disconnect();
+                srcNode.connect(masterGain);
+                masterGain.connect(offCtx.destination);
+
+                censors.forEach(c => {
+                    masterGain.gain.setValueAtTime(0, c.start);
+                    masterGain.gain.setValueAtTime(1, c.start + c.duration);
+                });
+
+                setProgress(55, 'Rendering audio…');
+                const rendered = await offCtx.startRendering();
+
+                setProgress(80, 'Encoding WAV…');
+                const wav = encodeWAV(rendered);
+
+                setProgress(95, 'Downloading…');
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href     = url;
+                a.download = `${fileName}-censored.wav`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                setProgress(100, 'Done!');
+                setTimeout(() => { progressWrap.style.display = 'none'; }, 2000);
+
+            } catch (err) {
+                console.error('Processing error:', err);
+                progressMsg.textContent = 'Error: ' + err.message;
+                progressMsg.style.color = 'var(--red)';
+            }
+
+            btnProcess.disabled = false;
+            btnProcess.innerHTML = '⬇ Process &amp; Download';
+        });
+
+        function setProgress(pct, msg) {
+            progressFill.style.width = pct + '%';
+            progressMsg.textContent = msg;
+        }
+
+        /* ── WAV encoder ── */
+        function encodeWAV(buffer) {
+            const numCh   = buffer.numberOfChannels;
+            const rate    = buffer.sampleRate;
+            const samples = buffer.length;
+            const bitsPerSample = 16;
+            const byteRate = rate * numCh * bitsPerSample / 8;
+            const blockAlign = numCh * bitsPerSample / 8;
+            const dataLen = samples * numCh * 2;
+            const wavBuf  = new ArrayBuffer(44 + dataLen);
+            const view    = new DataView(wavBuf);
+
+            function writeString(offset, str) {
+                for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+            }
+
+            writeString(0,  'RIFF');
+            view.setUint32(4,  36 + dataLen, true);
+            writeString(8,  'WAVE');
+            writeString(12, 'fmt ');
+            view.setUint32(16, 16,         true);  // subchunk size
+            view.setUint16(20, 1,          true);  // PCM
+            view.setUint16(22, numCh,      true);
+            view.setUint32(24, rate,       true);
+            view.setUint32(28, byteRate,   true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(36, 'data');
+            view.setUint32(40, dataLen, true);
+
+            let offset = 44;
+            for (let i = 0; i < samples; i++) {
+                for (let ch = 0; ch < numCh; ch++) {
+                    const s = Math.max(-1, Math.min(1, buffer.getChannelData(ch)[i]));
+                    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                    offset += 2;
+                }
+            }
+            return wavBuf;
+        }
+
+        /* ── Reset ── */
+        btnNewFile.addEventListener('click', () => {
+            if (isPlaying) stopAudio();
+            audioBuffer = null;
+            censors = [];
+            pausedAt = 0;
+            editor.style.display   = 'none';
+            dropZone.style.display = '';
+            fileInput.value = '';
+        });
+
+        /* ── Helpers ── */
+        function formatBytes(b) {
+            if (b < 1024) return b + ' B';
+            if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+            return (b / 1048576).toFixed(1) + ' MB';
+        }
+
+    })();
+    </script>
+</body>
+</html>
