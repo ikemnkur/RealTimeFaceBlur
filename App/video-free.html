@@ -5,6 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Face Blur — Free Video Blur</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
+    <meta name="theme-color" content="#7c6cfc">
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -852,6 +858,10 @@
         let maxFaces = 1;         // max number of faces to blur (1–3)
 
         // Mouse / touch click-blur state
+        // ── Watermark ──
+        const wmImg = new Image();
+        wmImg.src = 'PhaceBlurr_Alpha_Icon.png';
+
         let mouseBlurEnabled    = false;
         let mouseBlurPos        = null;  // { x, y } in canvas pixels, or null
         let mouseBlurHeld       = false;
@@ -1275,14 +1285,44 @@
             // 3. Apply manual click-blur (runs even when video is paused)
             applyMouseBlur(now);
 
-            // 4. Kick off detection only while video is playing and not in Manual mode
+            // 4. Draw watermark on top of all output
+            if (videoReady && canvas.width > 0) drawWatermark();
+
+            // 5. Kick off detection only while video is playing and not in Manual mode
             if (blurMode !== 'manual' && videoActive && now - lastDetectMs >= detectInterval) {
                 lastDetectMs = now;
                 runDetection();   // fire-and-forget; updates cachedFaces async
             }
 
-            // 5. Update memory meter (every ~60 frames ≈ 1s)
+            // 6. Update memory meter (every ~60 frames ≈ 1s)
             if (Math.random() < 0.016) updateMemMeter();
+        }
+
+        // ─────────────────────────────────────────────
+        //  Watermark — 48×48 icon + label at bottom-left,
+        //  rendered at 35% opacity on every output frame.
+        // ─────────────────────────────────────────────
+        function drawWatermark() {
+            const pad = 5;
+            const iconSize = 64;
+            const x = pad;
+            const y = canvas.height - iconSize - pad;
+
+            ctx.save();
+            ctx.globalAlpha = 0.25;
+
+            if (wmImg.complete && wmImg.naturalWidth > 0) {
+                ctx.drawImage(wmImg, x, y, iconSize, iconSize);
+            }
+
+            ctx.font = 'bold 13px \'DM Mono\', monospace';
+            ctx.fillStyle = '#ffffff';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0,0,0,0.7)';
+            ctx.shadowBlur = 4;
+            ctx.fillText('FaceBlurr.com', x + iconSize + 6, y + iconSize / 2);
+
+            ctx.restore();
         }
 
         // ─────────────────────────────────────────────

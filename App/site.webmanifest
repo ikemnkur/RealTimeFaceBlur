@@ -1,0 +1,21 @@
+{
+  "name": "FaceBlurr App",
+  "short_name": "FaceBlurr",
+  "description": "Real-time AI face blur for video and webcam.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d12",
+  "theme_color": "#7c6cfc",
+  "icons": [
+    {
+      "src": "android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
