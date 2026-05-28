@@ -135,16 +135,30 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* ── STATUS PILL ── */
+        /* ── STATUS TOAST ── */
         #status {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 1100;
             font-size: 0.8rem;
             letter-spacing: 0.06em;
-            padding: 0.4rem 1rem;
-            border-radius: 999px;
-            background: var(--surface2);
+            padding: 0.6rem 1.25rem;
+            border-radius: 10px;
+            background: var(--surface);
             border: 1px solid var(--border);
             color: var(--muted);
-            transition: all 0.3s;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+
+        #status.toast-hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
         }
 
         #status.ready {
@@ -231,6 +245,7 @@
             border: 1px solid var(--border);
             border-radius: 14px;
             padding: 1rem;
+            box-sizing: border-box;
         }
 
         .video-controls.active {
@@ -430,7 +445,11 @@
             transition: opacity 0.25s;
             z-index: 10;
         }
-        .countdown-overlay.visible { opacity: 1; }
+
+        .countdown-overlay.visible {
+            opacity: 1;
+        }
+
         .countdown-number {
             font-family: var(--display);
             font-size: clamp(5rem, 20vw, 9rem);
@@ -439,10 +458,21 @@
             text-shadow: 0 0 60px rgba(124, 108, 252, 0.9), 0 0 20px rgba(124, 108, 252, 0.6);
             animation: cd-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
+
         @keyframes cd-pop {
-            0%   { transform: scale(1.6); opacity: 0; }
-            30%  { opacity: 1; }
-            100% { transform: scale(1);   opacity: 1; }
+            0% {
+                transform: scale(1.6);
+                opacity: 0;
+            }
+
+            30% {
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         /* ── UPLOAD MODAL ── */
@@ -456,7 +486,11 @@
             align-items: center;
             justify-content: center;
         }
-        .modal-overlay.open { display: flex; }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
         .modal-box {
             background: var(--surface);
             border: 1px solid var(--border);
@@ -464,8 +498,9 @@
             padding: 1.5rem;
             width: min(480px, calc(100vw - 2rem));
             position: relative;
-            box-shadow: 0 32px 80px rgba(0,0,0,0.8);
+            box-shadow: 0 32px 80px rgba(0, 0, 0, 0.8);
         }
+
         .modal-close {
             position: absolute;
             top: 0.9rem;
@@ -479,7 +514,11 @@
             cursor: pointer;
             border-radius: 6px;
         }
-        .modal-close:hover { color: var(--text); background: var(--surface2); }
+
+        .modal-close:hover {
+            color: var(--text);
+            background: var(--surface2);
+        }
 
         /* seekbar */
         input[type=range].seek-bar {
@@ -576,7 +615,11 @@
             background: #000;
             z-index: 5;
         }
-        .preview-pip.visible { display: block; }
+
+        .preview-pip.visible {
+            display: none;
+        }
+
         #previewCanvas {
             display: block;
             width: 100%;
@@ -584,6 +627,7 @@
             max-height: none;
             background: #000;
         }
+
         .preview-pip-label {
             position: absolute;
             top: 5px;
@@ -598,6 +642,324 @@
             text-transform: uppercase;
             pointer-events: none;
         }
+
+        /* ── KEYFRAME SYSTEM ── */
+        .kf-section {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .kf-graph-wrap,
+        .kf-list-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.2rem;
+        }
+
+        #kfGraph {
+            display: block;
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            background: var(--surface2);
+        }
+
+        .kf-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem 1rem;
+            margin-top: 0.6rem;
+        }
+
+        .kf-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .kf-legend-swatch {
+            width: 18px;
+            height: 3px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .kf-list {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            margin-top: 0.75rem;
+        }
+
+        .kf-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .kf-list::-webkit-scrollbar-track {
+            background: var(--surface2);
+            border-radius: 99px;
+        }
+
+        .kf-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 99px;
+        }
+
+        .kf-item {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        .kf-item:hover {
+            border-color: rgba(124, 108, 252, 0.4);
+        }
+
+        .kf-item.expanded {
+            border-color: var(--accent);
+        }
+
+        .kf-header {
+            display: flex;
+            align-items: center;
+            padding: 0.55rem 0.8rem;
+            gap: 0.75rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .kf-num {
+            font-size: 0.7rem;
+            color: var(--accent);
+            font-weight: 600;
+            min-width: 28px;
+            font-family: var(--mono);
+        }
+
+        .kf-time {
+            font-size: 0.8rem;
+            flex: 1;
+            font-family: var(--mono);
+            letter-spacing: 0.04em;
+        }
+
+        .kf-expand {
+            font-size: 0.65rem;
+            color: var(--muted);
+            transition: transform 0.2s;
+        }
+
+        .kf-item.expanded .kf-expand {
+            transform: rotate(90deg);
+        }
+
+        .kf-details {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem 1rem;
+            padding: 0.55rem 0.8rem 0.7rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .kf-details.open {
+            display: grid;
+        }
+
+        .kf-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+
+        .kf-detail-val {
+            color: var(--text);
+            font-family: var(--mono);
+        }
+
+        .kf-del-btn {
+            padding: 0.2rem 0.55rem !important;
+            font-size: 0.68rem !important;
+            border-color: transparent;
+            color: var(--muted);
+            background: transparent;
+        }
+
+        .kf-del-btn:hover:not(:disabled) {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .kf-edit-btn {
+            padding: 0.2rem 0.55rem !important;
+            font-size: 0.68rem !important;
+            border-color: transparent;
+            color: var(--muted);
+            background: transparent;
+        }
+
+        .kf-edit-btn:hover:not(:disabled) {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(124, 108, 252, 0.08);
+        }
+
+        /* ── KF EDIT MODAL ── */
+        .kf-edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 0.9rem;
+        }
+
+        .kf-edit-field {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .kf-edit-field label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            min-width: 90px;
+        }
+
+        .kf-edit-field input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+        }
+
+        .kf-edit-field input[type="number"] {
+            width: 68px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 0.28rem 0.45rem;
+            font-size: 0.75rem;
+            font-family: var(--mono);
+            text-align: right;
+        }
+
+        .kf-edit-field select {
+            flex: 1;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            padding: 0.3rem 0.5rem;
+            font-size: 0.78rem;
+            font-family: var(--mono);
+        }
+
+        .kf-edit-actions {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: flex-end;
+            margin-top: 1.1rem;
+        }
+
+        .kf-empty {
+            color: var(--muted);
+            font-size: 0.75rem;
+            padding: 0.5rem 0;
+            text-align: center;
+        }
+
+        /* ── BLUR TRACKS PANEL ── */
+        .blur-tracks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .blur-track-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.45rem 0.7rem;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            cursor: pointer;
+            transition: border-color 0.18s, background 0.18s;
+            user-select: none;
+        }
+
+        .blur-track-item:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .blur-track-item.active {
+            border-color: var(--accent);
+            background: rgba(124, 108, 252, 0.1);
+        }
+
+        .blur-track-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .blur-track-name {
+            font-size: 0.78rem;
+            flex: 1;
+        }
+
+        .blur-track-kf {
+            font-size: 0.65rem;
+            color: var(--muted);
+            min-width: 28px;
+            text-align: right;
+        }
+
+        .blur-track-del {
+            padding: 0.15rem 0.4rem !important;
+            font-size: 0.65rem !important;
+            border-color: transparent;
+            color: var(--muted);
+            background: transparent;
+        }
+
+        .blur-track-del:hover:not(:disabled) {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        .track-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: var(--muted);
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
+            margin-left: 0.5rem;
+        }
+
+        .track-badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
     </style>
     <script src="js/guard.js"></script>
 </head>
@@ -605,31 +967,91 @@
 <body>
     <script>FaceBlurAuth.requirePlan('advanced');</script>
 
-{% set activePage = "video" %}
+    {% set activePage = "video" %}
     {% include "_partials/nav.html" %}
 
     <div class="main">
-        <!-- <h1 class="page-title">Video <span>Face Blur</span></h1> -->
-
-        <div id="status" class="ready">✓ Ready — upload a video</div>
-
-    <!-- Upload modal -->
-    <div class="modal-overlay" id="uploadModal">
-        <div class="modal-box">
-            <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
-            <div class="upload-area" id="uploadArea" onclick="document.getElementById('uploadVideo').click()">
-                <div class="upload-icon">📁</div>
-                <h3>Click or drop a video here</h3>
-                <p>MP4 · WebM · MOV · AVI</p>
-                <input type="file" id="uploadVideo" accept="video/*" style="display:none">
+        <!-- Upload modal -->
+        <div class="modal-overlay" id="uploadModal">
+            <div class="modal-box">
+                <button class="modal-close" id="modalCloseBtn" aria-label="Close">✕</button>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('uploadVideo').click()">
+                    <div class="upload-icon">📁</div>
+                    <h3>Click or drop a video here</h3>
+                    <p>MP4 · WebM · MOV · AVI</p>
+                    <input type="file" id="uploadVideo" accept="video/*" style="display:none">
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="content-wrapper">
+        <!-- Keyframe Edit Modal -->
+        <div class="modal-overlay" id="kfEditModal">
+            <div class="modal-box">
+                <button class="modal-close" id="kfEditCloseBtn" aria-label="Close">✕</button>
+                <div class="settings-title" style="margin-bottom:0.2rem">Edit Keyframe</div>
+                <div class="kf-edit-form">
+                    <div class="kf-edit-field">
+                        <label>Time (s)</label>
+                        <input type="number" id="kfEditTime" step="0.001" min="0"
+                            style="flex:1;width:auto;text-align:left">
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Mask Type</label>
+                        <select id="kfEditMaskType">
+                            <option value="blur">Pixelated</option>
+                            <option value="smooth">Smooth Blur</option>
+                            <option value="black">Black Ellipse</option>
+                            <option value="image">Custom Image</option>
+                        </select>
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Pos X</label>
+                        <input type="range" id="kfEditPosX" min="0" max="100" step="0.5">
+                        <input type="number" id="kfEditPosXNum" min="0" max="100" step="0.5">
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Pos Y</label>
+                        <input type="range" id="kfEditPosY" min="0" max="100" step="0.5">
+                        <input type="number" id="kfEditPosYNum" min="0" max="100" step="0.5">
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Size</label>
+                        <input type="range" id="kfEditSize" min="10" max="120" step="1">
+                        <input type="number" id="kfEditSizeNum" min="10" max="120" step="1">
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Opacity</label>
+                        <input type="range" id="kfEditAlpha" min="0.1" max="1" step="0.01">
+                        <input type="number" id="kfEditAlphaNum" min="0.1" max="1" step="0.01">
+                    </div>
+                    <div class="kf-edit-field">
+                        <label>Fade Time</label>
+                        <input type="range" id="kfEditFade" min="0.1" max="3" step="0.1">
+                        <input type="number" id="kfEditFadeNum" min="0.1" max="3" step="0.1">
+                    </div>
+                </div>
+                <div class="kf-edit-actions">
+                    <button id="kfEditCancelBtn">Cancel</button>
+                    <button id="kfEditSaveBtn" class="btn-primary">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status toast -->
+        <div id="status" class="ready toast-hidden">✓ Ready — upload a video</div>
+
+        <div class="content-wrapper">
             <!-- Left Panel: Upload & Settings -->
             <div class="left-panel">
 
+                <!-- Blur Tracks -->
+                <div class="settings" id="blurTracksPanel">
+                    <div class="settings-title">Blur Tracks</div>
+                    <div id="blurTracksList" class="blur-tracks-list"></div>
+                    <div class="setting-row">
+                        <button id="addTrackBtn" style="flex:1">＋ Add Track</button>
+                    </div>
+                </div>
 
                 <!-- Settings -->
                 <div class="settings">
@@ -663,7 +1085,8 @@
                         <label>Mask Image</label>
                         <button id="uploadMaskBtn" style="flex:1">📷 Upload…</button>
                         <input type="file" id="uploadMaskInput" accept="image/*" style="display:none">
-                        <img id="maskPreview" style="display:none;width:36px;height:36px;border-radius:5px;border:1px solid var(--border);object-fit:cover;flex-shrink:0">
+                        <img id="maskPreview"
+                            style="display:none;width:36px;height:36px;border-radius:5px;border:1px solid var(--border);object-fit:cover;flex-shrink:0">
                     </div>
 
                     <div class="setting-row">
@@ -707,6 +1130,29 @@
                         <span class="setting-val" id="previewAdvanceVal">1.0s</span>
                     </div>
 
+                    <div class="setting-row">
+                        <label>Pos X</label>
+                        <input type="range" id="posXIn" min="0" max="100" value="50" step="0.5">
+                        <span class="setting-val" id="posXVal">50%</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>Pos Y</label>
+                        <input type="range" id="posYIn" min="0" max="100" value="50" step="0.5">
+                        <span class="setting-val" id="posYVal">50%</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <button id="addKeyframeBtn" class="btn-green" style="flex:1">🔖 Add Keyframe</button>
+                    </div>
+
+                </div>
+
+                 <!-- Blur Tracks -->
+                <div class="settings" id="blurTracksPanel">
+                    <div class="rec-row">
+                            <button id="processBtn" class="btn-primary" disabled>⏺ Process & Export</button>
+                        </div>
                 </div>
             </div>
 
@@ -725,7 +1171,7 @@
                 </div>
 
                 <!-- Playback controls -->
-                <div>
+                <div style="width:100%">
                     <div class="video-controls" id="videoControls">
                         <div class="playback-row">
                             <button id="playPauseBtn">▶ Play</button>
@@ -733,8 +1179,27 @@
                             <span class="time-display" id="timeDisplay">00:00 / 00:00</span>
                         </div>
                         <input type="range" id="seekBar" class="seek-bar" min="0" max="100" value="0" step="0.1">
-                        <div class="rec-row">
+                        <!-- <div class="rec-row">
                             <button id="processBtn" class="btn-primary" disabled>⏺ Process & Export</button>
+                        </div> -->
+                    </div>
+                </div>
+
+                <!-- Keyframe Timeline Graph -->
+                <div class="kf-section" id="kfSection" style="display:none">
+                    <div class="kf-graph-wrap">
+                        <div class="settings-title">Keyframe Timeline <span id="kfGraphTrackBadge"
+                                class="track-badge"></span></div>
+                        <canvas id="kfGraph" height="180"></canvas>
+                        <div class="kf-legend" id="kfLegend"></div>
+                    </div>
+
+                    <!-- Keyframe List -->
+                    <div class="kf-list-wrap">
+                        <div class="settings-title">Keyframes <span id="kfListTrackBadge" class="track-badge"></span>
+                        </div>
+                        <div class="kf-list" id="kfList">
+                            <div class="kf-empty">No keyframes added yet.</div>
                         </div>
                     </div>
                 </div>
@@ -742,6 +1207,8 @@
             </div>
         </div>
     </div>
+
+
 
     {% include "_partials/footer.html" %}
 
@@ -765,34 +1232,34 @@
         const maskTypeSelect = document.getElementById('maskTypeSelect');
         const clickBlurBtn = document.getElementById('clickBlurBtn');
         const canvasWrap = document.getElementById('canvasWrap');
-        const cbSizeIn     = document.getElementById('cbSize');
-        const cbSizeVal    = document.getElementById('cbSizeValue');
-        const cbFadeIn     = document.getElementById('cbFade');
-        const cbFadeVal    = document.getElementById('cbFadeValue');
-        const cbAlphaIn    = document.getElementById('cbAlpha');
-        const cbAlphaVal   = document.getElementById('cbAlphaValue');
-        const cbOffsetXIn  = document.getElementById('cbOffsetX');
+        const cbSizeIn = document.getElementById('cbSize');
+        const cbSizeVal = document.getElementById('cbSizeValue');
+        const cbFadeIn = document.getElementById('cbFade');
+        const cbFadeVal = document.getElementById('cbFadeValue');
+        const cbAlphaIn = document.getElementById('cbAlpha');
+        const cbAlphaVal = document.getElementById('cbAlphaValue');
+        const cbOffsetXIn = document.getElementById('cbOffsetX');
         const cbOffsetXVal = document.getElementById('cbOffsetXValue');
-        const cbOffsetYIn  = document.getElementById('cbOffsetY');
+        const cbOffsetYIn = document.getElementById('cbOffsetY');
         const cbOffsetYVal = document.getElementById('cbOffsetYValue');
-        const uploadModal   = document.getElementById('uploadModal');
+        const uploadModal = document.getElementById('uploadModal');
         const openUploadBtn = document.getElementById('openUploadBtn');
         const modalCloseBtn = document.getElementById('modalCloseBtn');
         const countdownOverlay = document.getElementById('countdownOverlay');
-        const previewPip    = document.getElementById('previewPip');
+        const previewPip = document.getElementById('previewPip');
         const previewCanvas = document.getElementById('previewCanvas');
-        const previewCtx    = previewCanvas.getContext('2d');
-        const previewVideo  = document.getElementById('previewVideo');
-        const previewPipLabel     = document.getElementById('previewPipLabel');
-        const previewAdvanceIn    = document.getElementById('previewAdvanceIn');
+        const previewCtx = previewCanvas.getContext('2d');
+        const previewVideo = document.getElementById('previewVideo');
+        const previewPipLabel = document.getElementById('previewPipLabel');
+        const previewAdvanceIn = document.getElementById('previewAdvanceIn');
         const previewAdvanceValEl = document.getElementById('previewAdvanceVal');
-        const maskImageRow    = document.getElementById('maskImageRow');
-        const uploadMaskBtn   = document.getElementById('uploadMaskBtn');
+        const maskImageRow = document.getElementById('maskImageRow');
+        const uploadMaskBtn = document.getElementById('uploadMaskBtn');
         const uploadMaskInput = document.getElementById('uploadMaskInput');
-        const maskPreview     = document.getElementById('maskPreview');
+        const maskPreview = document.getElementById('maskPreview');
 
         // ── Modal open / close ──
-        function openModal()  { uploadModal.classList.add('open'); }
+        function openModal() { uploadModal.classList.add('open'); }
         function closeModal() { uploadModal.classList.remove('open'); }
         openUploadBtn.addEventListener('click', openModal);
         modalCloseBtn.addEventListener('click', closeModal);
@@ -816,15 +1283,15 @@
         let customMaskImage = null;
 
         // Mouse / touch click-blur state
-        let mouseBlurEnabled    = true;
-        let mouseBlurPos        = null;  // { x, y } in canvas pixels, or null
-        let mouseBlurHeld       = false;
+        let mouseBlurEnabled = true;
+        let mouseBlurPos = null;  // { x, y } in canvas pixels, or null
+        let mouseBlurHeld = false;
         let mouseBlurReleasedAt = 0;     // performance.now() timestamp of last release
-        let cbSize      = 40;   // click-blur radius
-        let cbFadeTime  = 0.4;  // seconds to fade out on release
-        let cbAlpha     = 1.0;  // max opacity
-        let cbOffsetX   = 0;    // horizontal offset in canvas px
-        let cbOffsetY   = -32;  // vertical offset in canvas px
+        let cbSize = 40;   // click-blur radius
+        let cbFadeTime = 0.4;  // seconds to fade out on release
+        let cbAlpha = 1.0;  // max opacity
+        let cbOffsetX = 0;    // horizontal offset in canvas px
+        let cbOffsetY = -32;  // vertical offset in canvas px
 
 
         // ─────────────────────────────────────────────
@@ -920,7 +1387,7 @@
                     previewVideo.currentTime = target;
                 } else if (previewVideo.paused) {
                     previewVideo.currentTime = target;
-                    previewVideo.play().catch(() => {});
+                    previewVideo.play().catch(() => { });
                 }
             } else {
                 previewVideo.pause();
@@ -1033,7 +1500,8 @@
         seekBar.addEventListener('input', e => {
             video.currentTime = (e.target.value / 100) * video.duration;
         });
-        seekBar.addEventListener('mouseup', () => { isSeeking = false; video.play(); startLoop(); });
+        // seekBar.addEventListener('mouseup', () => { isSeeking = false; video.play(); startLoop(); });
+        seekBar.addEventListener('mouseup', () => { isSeeking = false; startLoop(); });
         seekBar.addEventListener('touchend', () => { isSeeking = false; video.play(); startLoop(); });
 
         video.addEventListener('ended', () => {
@@ -1041,7 +1509,7 @@
             playPauseBtn.textContent = '▶ Play';
         });
 
-        video.addEventListener('play',  syncPreviewPip);
+        video.addEventListener('play', syncPreviewPip);
         video.addEventListener('pause', syncPreviewPip);
         video.addEventListener('seeked', () => {
             if (previewPip.classList.contains('visible')) {
@@ -1063,6 +1531,7 @@
             // Draw current video frame on every tick so stale click-blur patches don't accumulate
             if (videoReady && canvas.width > 0) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                applyKeyframedBlurs(); // animated blur tracks lerped between keyframes
             }
 
             // Draw preview PiP (1 s ahead)
@@ -1201,7 +1670,7 @@
 
             video.onloadedmetadata = () => {
                 resizeCanvas();
-                previewCanvas.width  = Math.round(video.videoWidth  * 0.5);
+                previewCanvas.width = Math.round(video.videoWidth * 0.5);
                 previewCanvas.height = Math.round(video.videoHeight * 0.5);
                 videoControls.classList.add('active');
                 processBtn.disabled = false;
@@ -1217,12 +1686,19 @@
 
 
         // ─────────────────────────────────────────────
-        //  Status helper
+        //  Status helper — shows as a bottom-right toast
         // ─────────────────────────────────────────────
+        let _statusTimer = null;
         function setStatus(cls, msg) {
             statusEl.className = '';
             if (cls) statusEl.classList.add(cls);
             statusEl.textContent = msg;
+            statusEl.classList.remove('toast-hidden');
+            clearTimeout(_statusTimer);
+            // Auto-dismiss non-persistent states after 3 s
+            if (cls !== 'recording') {
+                _statusTimer = setTimeout(() => statusEl.classList.add('toast-hidden'), 3000);
+            }
         }
 
         // ─────────────────────────────────────────────
@@ -1304,6 +1780,671 @@
         // ─────────────────────────────────────────────
         setStatus('ready', '✓ Ready — upload a video');
         canvasWrap.classList.add('click-blur-mode');
+
+        // ─────────────────────────────────────────────
+        //  BLUR TRACKS & KEYFRAME SYSTEM
+        // ─────────────────────────────────────────────
+        const kfSection = document.getElementById('kfSection');
+        const kfListEl = document.getElementById('kfList');
+        const kfGraphCanvas = document.getElementById('kfGraph');
+        const kfLegendEl = document.getElementById('kfLegend');
+        const addKfBtn = document.getElementById('addKeyframeBtn');
+        const addTrackBtn = document.getElementById('addTrackBtn');
+        const blurTracksListEl = document.getElementById('blurTracksList');
+        const kfGraphTrackBadge = document.getElementById('kfGraphTrackBadge');
+        const kfListTrackBadge = document.getElementById('kfListTrackBadge');
+        const posXIn = document.getElementById('posXIn');
+        const posYIn = document.getElementById('posYIn');
+        const posXValEl = document.getElementById('posXVal');
+        const posYValEl = document.getElementById('posYVal');
+
+        const TRACK_COLORS = ['#7c6cfc', '#22d3a0', '#f97316', '#f87171', '#38bdf8'];
+        const MAX_TRACKS = 5;
+
+        let blurTracks = [];   // [{ id, name, color, keyframes: [] }, ...]
+        let activeTrackId = null;
+        let nextTrackId = 1;
+        let nextKfId = 1;
+
+        // ── Position state (set via sliders or canvas pointer) ──
+        let posX = 0.5, posY = 0.5;
+
+        posXIn.addEventListener('input', e => {
+            posX = +e.target.value / 100;
+            posXValEl.textContent = (+e.target.value).toFixed(0) + '%';
+        });
+        posYIn.addEventListener('input', e => {
+            posY = +e.target.value / 100;
+            posYValEl.textContent = (+e.target.value).toFixed(0) + '%';
+        });
+
+        // Mirror canvas pointer → position sliders (independent of click-blur toggle)
+        function syncPosFromPointer(e) {
+            const pos = canvasCoords(e.touches ? e : e);
+            posX = Math.max(0, Math.min(1, pos.x / (canvas.width || 1)));
+            posY = Math.max(0, Math.min(1, pos.y / (canvas.height || 1)));
+            posXIn.value = (posX * 100).toFixed(1);
+            posYIn.value = (posY * 100).toFixed(1);
+            posXValEl.textContent = (posX * 100).toFixed(0) + '%';
+            posYValEl.textContent = (posY * 100).toFixed(0) + '%';
+        }
+        canvas.addEventListener('mousedown', syncPosFromPointer);
+        canvas.addEventListener('touchstart', e => syncPosFromPointer(e), { passive: true });
+
+        // ── Blur track management ──
+        function addBlurTrack() {
+            if (blurTracks.length >= MAX_TRACKS) return;
+            const idx = blurTracks.length;
+            const color = TRACK_COLORS[idx % TRACK_COLORS.length];
+            const id = nextTrackId++;
+            const track = { id, name: `Blur ${id}`, color, keyframes: [] };
+            blurTracks.push(track);
+            activeTrackId = track.id;
+            renderTracksList();
+            renderKfList();
+            drawKfGraph();
+            updateAddTrackBtn();
+        }
+
+        function deleteBlurTrack(id) {
+            if (blurTracks.length <= 1) return; // always keep at least one track
+            blurTracks = blurTracks.filter(t => t.id !== id);
+            if (activeTrackId === id) {
+                activeTrackId = blurTracks[blurTracks.length - 1].id;
+            }
+            renderTracksList();
+            renderKfList();
+            drawKfGraph();
+            updateAddTrackBtn();
+            updateKfSectionVisibility();
+        }
+
+        function setActiveTrack(id) {
+            activeTrackId = id;
+            renderTracksList();
+            renderKfList();
+            drawKfGraph();
+            syncSettingsToActiveTrack(video.currentTime);
+        }
+
+        function getActiveTrack() {
+            return blurTracks.find(t => t.id === activeTrackId) || null;
+        }
+
+        function updateAddTrackBtn() {
+            const full = blurTracks.length >= MAX_TRACKS;
+            addTrackBtn.disabled = full;
+            addTrackBtn.textContent = full ? `Max ${MAX_TRACKS} tracks` : '＋ Add Track';
+        }
+
+        function updateKfSectionVisibility() {
+            const hasAny = blurTracks.some(t => t.keyframes.length > 0);
+            kfSection.style.display = hasAny ? '' : 'none';
+        }
+
+        function renderTracksList() {
+            blurTracksListEl.innerHTML = '';
+            blurTracks.forEach(track => {
+                const el = document.createElement('div');
+                el.className = 'blur-track-item' + (track.id === activeTrackId ? ' active' : '');
+                el.innerHTML = `
+                    <span class="blur-track-dot" style="background:${track.color}"></span>
+                    <span class="blur-track-name">${track.name}</span>
+                    <span class="blur-track-kf">${track.keyframes.length} kf</span>
+                    ${blurTracks.length > 1 ? `<button class="blur-track-del" data-id="${track.id}">✕</button>` : ''}
+                `;
+                el.addEventListener('click', e => {
+                    if (e.target.classList.contains('blur-track-del')) return;
+                    setActiveTrack(track.id);
+                });
+                const delBtn = el.querySelector('.blur-track-del');
+                if (delBtn) {
+                    delBtn.addEventListener('click', e => {
+                        e.stopPropagation();
+                        deleteBlurTrack(+e.target.dataset.id);
+                    });
+                }
+                blurTracksListEl.appendChild(el);
+            });
+        }
+
+        // ── Parameter definitions for the graph ──
+        const PARAM_DEFS = [
+            { key: 'posX', label: 'Pos X', color: '#38bdf8', min: 0, max: 1 },
+            { key: 'posY', label: 'Pos Y', color: '#fb923c', min: 0, max: 1 },
+            { key: 'cbSize', label: 'Size', color: '#7c6cfc', min: 10, max: 120 },
+            { key: 'cbAlpha', label: 'Opacity', color: '#c084fc', min: 0.1, max: 1 },
+            { key: 'cbFadeTime', label: 'Fade', color: '#22d3a0', min: 0.1, max: 3 },
+        ];
+
+        // Build legend once
+        (function buildLegend() {
+            PARAM_DEFS.forEach(def => {
+                const item = document.createElement('div');
+                item.className = 'kf-legend-item';
+                item.innerHTML = `<span class="kf-legend-swatch" style="background:${def.color}"></span>${def.label}`;
+                kfLegendEl.appendChild(item);
+            });
+        })();
+
+        // ── Keyframe capture ──
+        function captureKeyframe() {
+            const track = getActiveTrack();
+            if (!track) return;
+            const kf = {
+                id: nextKfId++,
+                time: video.currentTime || 0,
+                posX,
+                posY,
+                cbSize,
+                cbFadeTime,
+                cbAlpha,
+                maskType,
+            };
+            track.keyframes.push(kf);
+            track.keyframes.sort((a, b) => a.time - b.time);
+            updateKfSectionVisibility();
+            renderTracksList();
+            renderKfList();
+            drawKfGraph();
+            addKfBtn.textContent = '✓ Added';
+            addKfBtn.disabled = true;
+            setTimeout(() => { addKfBtn.textContent = '🔖 Add Keyframe'; addKfBtn.disabled = false; }, 900);
+        }
+
+        function deleteKeyframe(kfId) {
+            const track = getActiveTrack();
+            if (!track) return;
+            track.keyframes = track.keyframes.filter(k => k.id !== kfId);
+            renderTracksList();
+            renderKfList();
+            drawKfGraph();
+            updateKfSectionVisibility();
+        }
+
+        addKfBtn.addEventListener('click', captureKeyframe);
+        addTrackBtn.addEventListener('click', addBlurTrack);
+
+        // ── Track badges ──
+        function updateTrackBadges() {
+            const track = getActiveTrack();
+            const html = track
+                ? `<span class="track-badge-dot" style="background:${track.color}"></span>${track.name}`
+                : '';
+            kfGraphTrackBadge.innerHTML = html;
+            kfListTrackBadge.innerHTML = html;
+        }
+
+        // ── Keyframe list renderer ──
+        function renderKfList() {
+            updateTrackBadges();
+            const track = getActiveTrack();
+            kfListEl.innerHTML = '';
+            if (!track || track.keyframes.length === 0) {
+                kfListEl.innerHTML = '<div class="kf-empty">No keyframes on this track.</div>';
+                return;
+            }
+            track.keyframes.forEach((kf, idx) => {
+                const item = document.createElement('div');
+                item.className = 'kf-item';
+                item.dataset.id = kf.id;
+                item.innerHTML = `
+                    <div class="kf-header">
+                        <span class="kf-num">#${idx + 1}</span>
+                        <span class="kf-time">${fmt(kf.time)}</span>
+                        <span class="kf-expand">▶</span>
+                        <button class="kf-edit-btn" title="Edit keyframe" data-id="${kf.id}">✎</button>
+                        <button class="kf-del-btn" title="Delete keyframe" data-id="${kf.id}">✕</button>
+                    </div>
+                    <div class="kf-details" id="kf-det-${kf.id}">
+                        <div class="kf-detail-row"><span>Mask Type</span><span class="kf-detail-val">${kf.maskType}</span></div>
+                        <div class="kf-detail-row"><span>Pos X</span><span class="kf-detail-val">${(kf.posX * 100).toFixed(1)}%</span></div>
+                        <div class="kf-detail-row"><span>Pos Y</span><span class="kf-detail-val">${(kf.posY * 100).toFixed(1)}%</span></div>
+                        <div class="kf-detail-row"><span>Size</span><span class="kf-detail-val">${kf.cbSize}px</span></div>
+                        <div class="kf-detail-row"><span>Opacity</span><span class="kf-detail-val">${kf.cbAlpha.toFixed(2)}</span></div>
+                        <div class="kf-detail-row"><span>Fade</span><span class="kf-detail-val">${kf.cbFadeTime.toFixed(1)}s</span></div>
+                    </div>
+                `;
+                const header = item.querySelector('.kf-header');
+                const details = item.querySelector('.kf-details');
+                const expand = item.querySelector('.kf-expand');
+                header.addEventListener('click', e => {
+                    if (e.target.classList.contains('kf-del-btn')) return;
+                    if (e.target.classList.contains('kf-edit-btn')) return;
+                    const open = details.classList.toggle('open');
+                    item.classList.toggle('expanded', open);
+                    expand.textContent = open ? '▼' : '▶';
+                    if (open && video.readyState >= 1) video.currentTime = kf.time;
+                });
+                item.querySelector('.kf-edit-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    openKfEditModal(+e.target.dataset.id);
+                });
+                item.querySelector('.kf-del-btn').addEventListener('click', e => {
+                    e.stopPropagation();
+                    deleteKeyframe(+e.target.dataset.id);
+                });
+                kfListEl.appendChild(item);
+            });
+        }
+
+        // ── Graph drawing ──
+        function normalizeParam(def, val) {
+            return Math.min(1, Math.max(0, (val - def.min) / (def.max - def.min)));
+        }
+
+        function drawKfGraph() {
+            const container = kfGraphCanvas.parentElement;
+            const W = Math.max(200, container.clientWidth - 28);
+            const H = 180;
+            kfGraphCanvas.width = W;
+            kfGraphCanvas.height = H;
+
+            const gc = kfGraphCanvas.getContext('2d');
+            const currentT = video.currentTime || 0;
+            const tStart = Math.max(0, currentT - 5);
+            const tEnd = tStart + 10;
+
+            const ML = 44, MR = 16, MT = 22, MB = 28;
+            const PW = W - ML - MR;
+            const PH = H - MT - MB;
+
+            gc.clearRect(0, 0, W, H);
+            gc.fillStyle = 'rgba(28,28,40,1)';
+            gc.roundRect(0, 0, W, H, 8);
+            gc.fill();
+
+            const tx = t => ML + ((t - tStart) / 10) * PW;
+
+            // Horizontal grid
+            gc.strokeStyle = 'rgba(255,255,255,0.05)';
+            gc.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = MT + (PH * i / 4);
+                gc.beginPath(); gc.moveTo(ML, y); gc.lineTo(ML + PW, y); gc.stroke();
+                if (i < 4) {
+                    gc.fillStyle = 'rgba(100,116,139,0.5)';
+                    gc.font = '9px DM Mono, monospace';
+                    gc.textAlign = 'right';
+                    gc.fillText((1 - i / 4).toFixed(2), ML - 5, y + 3);
+                }
+            }
+
+            // Vertical time grid
+            gc.font = '9px DM Mono, monospace';
+            gc.textAlign = 'center';
+            gc.fillStyle = 'rgba(100,116,139,0.7)';
+            for (let t = Math.ceil(tStart); t <= tEnd; t++) {
+                const x = tx(t);
+                gc.strokeStyle = 'rgba(255,255,255,0.04)';
+                gc.lineWidth = 1;
+                gc.beginPath(); gc.moveTo(x, MT); gc.lineTo(x, MT + PH); gc.stroke();
+                gc.fillText(fmt(t), x, MT + PH + 16);
+            }
+
+            // Axes
+            gc.strokeStyle = 'rgba(255,255,255,0.12)';
+            gc.lineWidth = 1;
+            gc.setLineDash([]);
+            gc.beginPath();
+            gc.moveTo(ML, MT); gc.lineTo(ML, MT + PH); gc.lineTo(ML + PW, MT + PH);
+            gc.stroke();
+
+            // ── All-tracks keyframe ticks (small coloured marks above plot area) ──
+            blurTracks.forEach(track => {
+                track.keyframes.forEach(kf => {
+                    const x = tx(kf.time);
+                    if (x < ML || x > ML + PW) return;
+                    gc.globalAlpha = track.id === activeTrackId ? 0 : 0.55;
+                    gc.fillStyle = track.color;
+                    gc.fillRect(x - 2, MT - 14, 4, 8);
+                    gc.globalAlpha = 1;
+                });
+            });
+
+            const activeTrack = getActiveTrack();
+            if (!activeTrack || activeTrack.keyframes.length === 0) {
+                gc.fillStyle = '#64748b';
+                gc.font = '12px DM Mono, monospace';
+                gc.textAlign = 'center';
+                gc.fillText('No keyframes on this track', W / 2, H / 2 + 4);
+            } else {
+                const kfs = activeTrack.keyframes;
+
+                // Dashed vertical markers for active-track keyframes
+                kfs.forEach(kf => {
+                    const x = tx(kf.time);
+                    if (x < ML || x > ML + PW) return;
+                    gc.strokeStyle = 'rgba(255,255,255,0.13)';
+                    gc.lineWidth = 1;
+                    gc.setLineDash([3, 4]);
+                    gc.beginPath(); gc.moveTo(x, MT); gc.lineTo(x, MT + PH); gc.stroke();
+                    gc.setLineDash([]);
+                });
+
+                // Parameter lines
+                PARAM_DEFS.forEach(def => {
+                    const pts = kfs.map(kf => ({
+                        x: tx(kf.time),
+                        y: MT + PH - normalizeParam(def, kf[def.key]) * PH
+                    }));
+                    if (pts.length === 0) return;
+
+                    gc.strokeStyle = def.color;
+                    gc.lineWidth = 1.8;
+                    gc.setLineDash([]);
+                    gc.beginPath();
+                    pts.forEach((p, i) => i === 0 ? gc.moveTo(p.x, p.y) : gc.lineTo(p.x, p.y));
+                    gc.stroke();
+
+                    pts.forEach((p, i) => {
+                        const kf = kfs[i];
+                        if (tx(kf.time) < ML - 8 || tx(kf.time) > ML + PW + 8) return;
+                        gc.beginPath();
+                        gc.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+                        gc.fillStyle = def.color;
+                        gc.fill();
+                        gc.strokeStyle = 'rgba(13,13,18,0.9)';
+                        gc.lineWidth = 1.5;
+                        gc.stroke();
+                    });
+                });
+            }
+
+            // Current-time playhead
+            const cx = tx(currentT);
+            if (cx >= ML && cx <= ML + PW) {
+                gc.strokeStyle = 'rgba(255,255,255,0.85)';
+                gc.lineWidth = 1.5;
+                gc.setLineDash([]);
+                gc.beginPath(); gc.moveTo(cx, MT); gc.lineTo(cx, MT + PH); gc.stroke();
+                gc.fillStyle = '#ffffff';
+                gc.beginPath();
+                gc.moveTo(cx - 5, MT - 1);
+                gc.lineTo(cx + 5, MT - 1);
+                gc.lineTo(cx, MT + 8);
+                gc.closePath();
+                gc.fill();
+            }
+        }
+
+        // ── Linear interpolation ──
+        function lerp(a, b, t) { return a + (b - a) * t; }
+
+        function getInterpolatedParams(track, time) {
+            const kfs = track.keyframes;
+            if (kfs.length === 0) return null;
+            if (kfs.length === 1 || time <= kfs[0].time) return { ...kfs[0] };
+            if (time >= kfs[kfs.length - 1].time) return { ...kfs[kfs.length - 1] };
+            let i = 0;
+            while (i < kfs.length - 1 && kfs[i + 1].time <= time) i++;
+            const a = kfs[i], b = kfs[i + 1];
+            const t = (time - a.time) / (b.time - a.time);
+            return {
+                posX: lerp(a.posX, b.posX, t),
+                posY: lerp(a.posY, b.posY, t),
+                cbSize: lerp(a.cbSize, b.cbSize, t),
+                cbAlpha: lerp(a.cbAlpha, b.cbAlpha, t),
+                cbFadeTime: lerp(a.cbFadeTime, b.cbFadeTime, t),
+                maskType: a.maskType,
+            };
+        }
+
+        // ── Draw all active keyframed blur tracks onto canvas ──
+        function applyKeyframedBlurs() {
+            if (!canvas.width) return;
+            const t = video.currentTime;
+            blurTracks.forEach(track => {
+                if (track.keyframes.length === 0) return;
+                const p = getInterpolatedParams(track, t);
+                if (!p) return;
+                drawBlurAt(p.posX * canvas.width, p.posY * canvas.height, p);
+            });
+        }
+
+        function drawBlurAt(cx, cy, params) {
+            const r = Math.max(1, params.cbSize);
+            const alpha = Math.max(0, Math.min(1, params.cbAlpha));
+            ctx.save();
+            ctx.globalAlpha = alpha;
+
+            if (params.maskType === 'black') {
+                const grad = ctx.createRadialGradient(cx, cy, r * 0.55, cx, cy, r);
+                grad.addColorStop(0, 'rgba(0,0,0,1)');
+                grad.addColorStop(0.6, 'rgba(0,0,0,0.95)');
+                grad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, r, r, 0, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            } else if (params.maskType === 'smooth') {
+                const x = Math.max(0, cx - r);
+                const y = Math.max(0, cy - r);
+                const w = Math.min(r * 2, canvas.width - x);
+                const h = Math.min(r * 2, canvas.height - y);
+                if (w > 0 && h > 0) {
+                    const blurPx = Math.max(10, Math.round(r / 2));
+                    const W = Math.round(w), H = Math.round(h);
+                    const tmp1 = document.createElement('canvas');
+                    tmp1.width = W; tmp1.height = H;
+                    const tctx1 = tmp1.getContext('2d');
+                    tctx1.filter = `blur(${blurPx}px)`;
+                    tctx1.drawImage(canvas, x, y, w, h, 0, 0, W, H);
+                    const tmp2 = document.createElement('canvas');
+                    tmp2.width = W; tmp2.height = H;
+                    const tctx2 = tmp2.getContext('2d');
+                    tctx2.filter = `blur(${blurPx}px)`;
+                    tctx2.drawImage(tmp1, 0, 0);
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, r, r, 0, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.drawImage(tmp2, 0, 0, W, H, x, y, w, h);
+                }
+            } else if (params.maskType === 'image' && customMaskImage) {
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, r, r, 0, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.drawImage(customMaskImage, cx - r, cy - r, r * 2, r * 2);
+            } else {
+                // Pixelated (default)
+                const x = Math.max(0, cx - r);
+                const y = Math.max(0, cy - r);
+                const w = Math.min(r * 2, canvas.width - x);
+                const h = Math.min(r * 2, canvas.height - y);
+                if (w > 0 && h > 0) {
+                    const pixelSize = Math.max(4, Math.round(r / 6));
+                    const tc = document.createElement('canvas');
+                    const tctx = tc.getContext('2d');
+                    const sW = Math.ceil(w / pixelSize);
+                    const sH = Math.ceil(h / pixelSize);
+                    tc.width = sW; tc.height = sH;
+                    tctx.drawImage(canvas, x, y, w, h, 0, 0, sW, sH);
+                    ctx.beginPath();
+                    ctx.ellipse(cx, cy, r, r, 0, 0, Math.PI * 2);
+                    ctx.clip();
+                    ctx.imageSmoothingEnabled = false;
+                    ctx.drawImage(tc, 0, 0, sW, sH, x, y, w, h);
+                }
+            }
+            ctx.restore();
+        }
+
+        // Keep graph current-time indicator in sync while playing
+        let kfGraphLastDraw = 0;
+        video.addEventListener('timeupdate', () => {
+            const hasAny = blurTracks.some(t => t.keyframes.length > 0);
+            if (!hasAny) return;
+            const now = Date.now();
+            if (now - kfGraphLastDraw > 150) {
+                kfGraphLastDraw = now;
+                drawKfGraph();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            const hasAny = blurTracks.some(t => t.keyframes.length > 0);
+            if (hasAny) drawKfGraph();
+        });
+
+        // ── Graph click → seek ──
+        kfGraphCanvas.style.cursor = 'pointer';
+        kfGraphCanvas.addEventListener('click', e => {
+            if (!video.duration) return;
+            const rect = kfGraphCanvas.getBoundingClientRect();
+            const W = kfGraphCanvas.width;
+            const ML = 44, MR = 16;
+            const PW = W - ML - MR;
+            const xRel = (e.clientX - rect.left) * (W / rect.width);
+            const ratio = Math.max(0, Math.min(1, (xRel - ML) / PW));
+            const currentT = video.currentTime || 0;
+            const tStart = Math.max(0, currentT - 5);
+            const tEnd = tStart + 10;
+            video.currentTime = tStart + ratio * (tEnd - tStart);
+        });
+
+        // ── Keyboard shortcuts ──
+        document.addEventListener('keydown', e => {
+            // Ignore when typing in an input / textarea / select or modal open
+            const tag = document.activeElement ? document.activeElement.tagName : '';
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+            if (kfEditModal.classList.contains('open')) return;
+
+            if (e.code === 'Space' || e.key === 'p' || e.key === 'P') {
+                e.preventDefault();
+                if (video.paused) video.play(); else video.pause();
+            } else if (e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                captureKeyframe();
+            }
+        });
+
+        // ── Init: create first default track ──
+        addBlurTrack();
+
+        // ─────────────────────────────────────────────
+        //  Sync settings panel → active track at 5 Hz
+        // ─────────────────────────────────────────────
+        function syncSettingsToActiveTrack(t) {
+            const track = getActiveTrack();
+            if (!track || track.keyframes.length === 0) return;
+            const p = getInterpolatedParams(track, t);
+            if (!p) return;
+
+            posX = p.posX;
+            posY = p.posY;
+            posXIn.value = (posX * 100).toFixed(1);
+            posYIn.value = (posY * 100).toFixed(1);
+            posXValEl.textContent = (posX * 100).toFixed(0) + '%';
+            posYValEl.textContent = (posY * 100).toFixed(0) + '%';
+
+            cbSize = p.cbSize;
+            cbSizeIn.value = cbSize;
+            cbSizeVal.textContent = Math.round(cbSize) + 'px';
+
+            cbFadeTime = p.cbFadeTime;
+            cbFadeIn.value = cbFadeTime;
+            cbFadeVal.textContent = cbFadeTime.toFixed(1) + 's';
+
+            cbAlpha = p.cbAlpha;
+            cbAlphaIn.value = cbAlpha;
+            cbAlphaVal.textContent = cbAlpha.toFixed(2);
+
+            maskType = p.maskType;
+            maskTypeSelect.value = maskType;
+            maskImageRow.style.display = maskType === 'image' ? 'flex' : 'none';
+        }
+
+        let _syncInterval = null;
+        video.addEventListener('play', () => {
+            clearInterval(_syncInterval);
+            _syncInterval = setInterval(() => syncSettingsToActiveTrack(video.currentTime), 200);
+        });
+        video.addEventListener('pause', () => {
+            clearInterval(_syncInterval);
+            syncSettingsToActiveTrack(video.currentTime);
+        });
+        video.addEventListener('ended', () => clearInterval(_syncInterval));
+        video.addEventListener('seeked', () => syncSettingsToActiveTrack(video.currentTime));
+
+        // ─────────────────────────────────────────────
+        //  Keyframe Edit Modal
+        // ─────────────────────────────────────────────
+        const kfEditModal = document.getElementById('kfEditModal');
+        const kfEditCloseBtn = document.getElementById('kfEditCloseBtn');
+        const kfEditCancelBtn = document.getElementById('kfEditCancelBtn');
+        const kfEditSaveBtn = document.getElementById('kfEditSaveBtn');
+        const kfEditTimeIn = document.getElementById('kfEditTime');
+        const kfEditMaskType = document.getElementById('kfEditMaskType');
+        const kfEditPosX = document.getElementById('kfEditPosX');
+        const kfEditPosXNum = document.getElementById('kfEditPosXNum');
+        const kfEditPosY = document.getElementById('kfEditPosY');
+        const kfEditPosYNum = document.getElementById('kfEditPosYNum');
+        const kfEditSize = document.getElementById('kfEditSize');
+        const kfEditSizeNum = document.getElementById('kfEditSizeNum');
+        const kfEditAlpha = document.getElementById('kfEditAlpha');
+        const kfEditAlphaNum = document.getElementById('kfEditAlphaNum');
+        const kfEditFade = document.getElementById('kfEditFade');
+        const kfEditFadeNum = document.getElementById('kfEditFadeNum');
+
+        let _editingKfId = null;
+
+        function openKfEditModal(kfId) {
+            const track = getActiveTrack();
+            if (!track) return;
+            const kf = track.keyframes.find(k => k.id === kfId);
+            if (!kf) return;
+            _editingKfId = kfId;
+            kfEditTimeIn.max = (video.duration || 9999).toFixed(3);
+            kfEditTimeIn.value = kf.time.toFixed(3);
+            kfEditMaskType.value = kf.maskType;
+            const px = (kf.posX * 100).toFixed(1);
+            const py = (kf.posY * 100).toFixed(1);
+            kfEditPosX.value = px; kfEditPosXNum.value = px;
+            kfEditPosY.value = py; kfEditPosYNum.value = py;
+            kfEditSize.value = kf.cbSize; kfEditSizeNum.value = kf.cbSize;
+            kfEditAlpha.value = kf.cbAlpha; kfEditAlphaNum.value = kf.cbAlpha;
+            kfEditFade.value = kf.cbFadeTime; kfEditFadeNum.value = kf.cbFadeTime;
+            kfEditModal.classList.add('open');
+        }
+
+        function closeKfEditModal() {
+            kfEditModal.classList.remove('open');
+            _editingKfId = null;
+        }
+
+        function saveKfEdit() {
+            const track = getActiveTrack();
+            if (!track || _editingKfId === null) return;
+            const kf = track.keyframes.find(k => k.id === _editingKfId);
+            if (!kf) return;
+            kf.time = Math.max(0, parseFloat(kfEditTimeIn.value) || 0);
+            kf.maskType = kfEditMaskType.value;
+            kf.posX = Math.max(0, Math.min(1, parseFloat(kfEditPosXNum.value) / 100));
+            kf.posY = Math.max(0, Math.min(1, parseFloat(kfEditPosYNum.value) / 100));
+            kf.cbSize = Math.max(10, Math.min(120, parseFloat(kfEditSizeNum.value) || 40));
+            kf.cbAlpha = Math.max(0.1, Math.min(1, parseFloat(kfEditAlphaNum.value) || 1));
+            kf.cbFadeTime = Math.max(0.1, Math.min(3, parseFloat(kfEditFadeNum.value) || 0.4));
+            track.keyframes.sort((a, b) => a.time - b.time);
+            closeKfEditModal();
+            renderKfList();
+            drawKfGraph();
+        }
+
+        // Sync range ↔ number fields inside the edit modal
+        function linkRangeNum(rangeEl, numEl) {
+            rangeEl.addEventListener('input', () => { numEl.value = rangeEl.value; });
+            numEl.addEventListener('input', () => { rangeEl.value = numEl.value; });
+        }
+        linkRangeNum(kfEditPosX, kfEditPosXNum);
+        linkRangeNum(kfEditPosY, kfEditPosYNum);
+        linkRangeNum(kfEditSize, kfEditSizeNum);
+        linkRangeNum(kfEditAlpha, kfEditAlphaNum);
+        linkRangeNum(kfEditFade, kfEditFadeNum);
+
+        kfEditCloseBtn.addEventListener('click', closeKfEditModal);
+        kfEditCancelBtn.addEventListener('click', closeKfEditModal);
+        kfEditSaveBtn.addEventListener('click', saveKfEdit);
+        kfEditModal.addEventListener('click', e => { if (e.target === kfEditModal) closeKfEditModal(); });
     </script>
 </body>
 
