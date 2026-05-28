@@ -2047,14 +2047,16 @@ server.get(PROXY + '/api/subscription/verify-session', async (req, res) => {
           status, current_period_start, current_period_end, created_at) 
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE 
-         stripe_subscription_id = VALUES(stripe_subscription_id),
-         status = VALUES(status),
-         current_period_start = VALUES(current_period_start),
-         current_period_end = VALUES(current_period_end)`,
+           stripe_customer_id   = VALUES(stripe_customer_id),
+           plan_id              = VALUES(plan_id),
+           plan_name            = VALUES(plan_name),
+           status               = VALUES(status),
+           current_period_start = VALUES(current_period_start),
+           current_period_end   = VALUES(current_period_end)`,
                 [
                     userId,
                     subscription.id,
-                    session.customer.id || session.customer,
+                    (session.customer && typeof session.customer === 'object' ? session.customer.id : session.customer) || null,
                     planId,
                     planName,
                     subscription.status,
